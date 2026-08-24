@@ -1,0 +1,17 @@
+---
+description: Docs/source trước khi khẳng định hành vi framework; cấm suy diễn giả làm chắc
+alwaysApply: true
+---
+
+# Evidence-first explanations (HDL labs)
+
+Khi giải thích **hành vi runtime** của Kafka / Spring Kafka / Rabbit / Redis / Security / Boot:
+
+1. **Docs hoặc source trước** — Spring reference, Javadoc API, hoặc class trên jar khớp BOM Boot 3.5. Có thể kèm log/thực nghiệm của user.
+2. **Cấm** khẳng định cơ chế (ack, offset, retry, DLT, leader…) chỉ bằng suy diễn rồi sửa khi user phản chứng.
+3. Docs chưa cover → ghi rõ **chưa verify / suy luận** + cách verify. Không nói như đã chắc.
+4. Case tinh vi → **dẫn link hoặc trích** Javadoc/source.
+5. Chi tiết đã học theo từng lab nằm trong `lab-*/…md` — đọc note lab khi đang làm lab đó; **không** phụ thuộc `AGENTS.md` chứa case cụ thể.
+6. Sau submodule xong: cập nhật note lab + `learning-path.md` **trước** khi đề xuất module kế (`AGENTS.md` §0.4).
+
+Đồng bộ với `AGENTS.md` §0.4–0.5.

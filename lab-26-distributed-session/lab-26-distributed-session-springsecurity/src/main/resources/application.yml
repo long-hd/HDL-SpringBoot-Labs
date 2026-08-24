@@ -1,0 +1,9 @@
+spring:
+  redis:
+    host: localhost
+    port: 6379
+  security:
+    user:
+      name: hdl
+      password: 123
+      roles: ADMIN

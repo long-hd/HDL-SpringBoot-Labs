@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>hdl-labs-parent</artifactId>
+        <groupId>com.hdl.springboot.labs</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>lab-04-rabbitmq</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <!--    01 - Queue 01,02,03,04   -->
+        <module>lab-04-rabbitmq-demo</module>
+        <!--    02 - Queue 05    -->
+        <module>lab-04-rabbitmq-ack</module>
+        <!--    03 - Queue 06    -->
+        <module>lab-04-rabbitmq-consume-retry</module>
+        <!--    04 - Queue 07    -->
+        <module>lab-04-rabbitmq-demo-concurrency</module>
+        <!--    05 - Queue 08   -->
+        <module>lab-04-rabbitmq-demo-orderly</module>
+    </modules>
+
+
+</project>

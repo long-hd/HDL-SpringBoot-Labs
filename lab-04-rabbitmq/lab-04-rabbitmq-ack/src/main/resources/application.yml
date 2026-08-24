@@ -1,0 +1,10 @@
+spring:
+  # Các thuộc tính cấu hình RabbitMQ, tương ứng với lớp RabbitProperties
+  rabbitmq:
+    host: 127.0.0.1 # Địa chỉ dịch vụ RabbitMQ
+    port: 5672 # Cổng dịch vụ RabbitMQ
+    username: guest # Tên người dùng dịch vụ RabbitMQ
+    password: guest # Mật khẩu dịch vụ RabbitMQ
+    listener:
+      simple:
+        acknowledge-mode: manual # Cấu hình consumer để xác nhận thủ công

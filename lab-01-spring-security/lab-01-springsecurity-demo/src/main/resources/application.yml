@@ -1,0 +1,8 @@
+spring:
+  # Các thuộc tính cấu hình Spring Security, tương ứng với lớp cấu hình SecurityProperties
+  security:
+    # Cấu hình tài khoản người dùng và mật khẩu cho InMemoryUserDetailsManager mặc định.
+    user:
+      name: user
+      password: user
+      roles: ADMIN

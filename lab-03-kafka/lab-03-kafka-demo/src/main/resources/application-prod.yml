@@ -1,0 +1,143 @@
+# =============================================================================
+# Profile: prod — cấu hình Kafka hướng production (best practice tham khảo)
+# Kích hoạt: --spring.profiles.active=prod
+#             hoặc SPRING_PROFILES_ACTIVE=prod
+#
+# Lưu ý:
+# - File này cố ý dùng placeholder ${...} để không hard-code secret/host prod.
+# - Retry/DLT consumer (DefaultErrorHandler, FixedBackOff, DeadLetterPublishingRecoverer)
+#   nằm ở KafkaConfig.java — prod nên cân nhắc ExponentialBackOff, phân loại exception,
+#   monitor topic *.DLT; không chỉ dựa vào yaml.
+# - Topic nên tạo trước bằng IaC/ops (số partition, replication-factor, min.insync.replicas).
+# =============================================================================
+
+spring:
+  # Các mục cấu hình Kafka, tương ứng với lớp cấu hình KafkaProperties
+  kafka:
+    # Nhiều broker, phân cách bằng dấu phẩy. Prod: lấy từ env/config server, không hard-code 127.0.0.1
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka-1:9092,kafka-2:9092,kafka-3:9092}
+
+    # ----- Client an toàn (bật khi cluster yêu cầu SASL/SSL; để comment nếu lab plaintext) -----
+    # security:
+    #   protocol: SASL_SSL # PLAINTEXT | SSL | SASL_PLAINTEXT | SASL_SSL
+    # properties:
+    #   sasl.mechanism: PLAIN # hoặc SCRAM-SHA-256 / SCRAM-SHA-512 tùy cluster
+    #   sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
+
+    # Các mục cấu hình Kafka Producer
+    producer:
+      # all (-1): chờ toàn bộ ISR ack — giảm mất tin khi leader failover. Đi kèm min.insync.replicas phía broker.
+      # 1: chỉ leader ack — nhanh hơn nhưng rủi ro mất tin cao hơn (đủ cho lab, không khuyến nghị cho nghiệp vụ quan trọng).
+      # 0: fire-and-forget — gần như không dùng cho prod.
+      acks: all
+
+      # Số lần thử lại khi gửi thất bại (transient). Với idempotence bật, client tự phối hợp retries an toàn hơn.
+      # Nên đủ lớn kết hợp delivery.timeout.ms; không đặt retries=0 trừ khi chủ đích không retry.
+      retries: ${KAFKA_PRODUCER_RETRIES:10}
+
+      # Tuần tự hóa key/value. Prod JSON ổn cho nhiều hệ; hệ lớn thường Avro/Protobuf + Schema Registry.
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      # Nén payload trên wire — giảm băng thông; lz4/zstd phổ biến. Broker/consumer phải tương thích.
+      compression-type: lz4
+
+      # Kích thước batch (byte) trước khi gửi — tăng throughput, tăng độ trễ nhẹ.
+      batch-size: 65536
+
+      # Bộ đệm tổng của producer (byte). Đầy thì send() block/fail tùy max.block.ms.
+      buffer-memory: 67108864
+
+      properties:
+        # Idempotent producer: tránh duplicate khi retry (cần acks=all, retries>0).
+        # Boot/Kafka hiện đại thường default true; khai báo rõ để không phụ thuộc version.
+        enable.idempotence: true
+
+        # Giữ = 5 (hoặc ≤5) khi idempotence=true. >5 có thể phá đảm bảo idempotent.
+        max.in.flight.requests.per.connection: 5
+
+        # Chờ thêm vài ms để gom batch — tăng throughput, tăng latency.
+        linger.ms: 5
+
+        # Thời gian tối đa cho một lần “gửi thành công” (gồm retry). Phải > request.timeout.ms.
+        delivery.timeout.ms: 120000
+
+        # Timeout một request tới broker.
+        request.timeout.ms: 30000
+
+        # Chờ lấy metadata/buffer khi block (ms).
+        max.block.ms: 60000
+
+        # (Tuỳ chọn) đúng-một-lần xuyên session — cần thêm cấu hình transaction + consumer isolation.
+        # transactional.id: ${KAFKA_TRANSACTIONAL_ID:}
+
+    # Các mục cấu hình Kafka Consumer
+    consumer:
+      # Group id mặc định (listener có thể override bằng @KafkaListener.groupId). Prod: tên ổn định theo dịch vụ.
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:lab03-kafka-demo}
+
+      # false: để Spring Kafka listener container commit offset (khuyến nghị với @KafkaListener).
+      # true + commit tự động dễ mất/trùng tin khi xử lý chưa xong đã commit.
+      enable-auto-commit: false
+
+      # Group MỚI chưa có offset đã commit: latest = chỉ đọc tin mới (tránh “ăn” lịch sử như lab earliest).
+      # earliest = đọc từ đầu log — chỉ khi chủ đích replay/backfill.
+      auto-offset-reset: latest
+
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      # Số record tối đa mỗi lần poll — cân bằng throughput vs thời gian xử lý một batch poll.
+      max-poll-records: 100
+
+      properties:
+        # Khoảng thời gian tối đa giữa hai lần poll trước khi bị coi là leave group (rebalance).
+        # Phải lớn hơn thời gian xử lý dài nhất của một lần poll (kể cả retry trong listener nếu có).
+        max.poll.interval.ms: 300000
+
+        # Session timeout / heartbeat — tùy cluster; giữ trong khoảng broker cho phép.
+        session.timeout.ms: 45000
+        heartbeat.interval.ms: 15000
+
+        # Đọc transactional: read_committed bỏ message abort trong transaction (khi dùng đúng-một-lần).
+        # isolation.level: read_committed
+
+        spring:
+          json:
+            # Chỉ package được phép deserialize — KHÔNG dùng "*" trên prod.
+            trusted:
+              packages: com.hdl.springboot.labs.lab03.kafkademo.message
+            # true: dùng header __TypeId__ để chọn class (khớp JsonSerializer mặc định).
+            use:
+              type:
+                headers: true
+
+    # Cấu hình Kafka Consumer Listener (Spring Kafka)
+    listener:
+      # true: thiếu topic lúc start → fail nhanh (fail-fast). Prod nên tạo topic trước; lab mới để false.
+      missing-topics-fatal: true
+
+      # Số thread consumer trong group (tăng song song theo partition; không nên > số partition của topic).
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+
+      # Cách commit offset sau khi listener xử lý.
+      # BATCH: commit theo batch poll (mặc định phổ biến, throughput tốt).
+      # RECORD: commit từng record (an toàn hơn, chậm hơn).
+      # MANUAL / MANUAL_IMMEDIATE: tự ack trong code — chỉ khi cần kiểm soát fine-grained.
+      ack-mode: BATCH
+
+      # single | batch — batch cần @KafkaListener nhận List/ConsumerRecords và BatchErrorHandler phù hợp.
+      type: single
+
+# Logging prod: đủ để vận hành, không nuốt hết log listener khi cần điều tra retry/DLT
+logging:
+  level:
+    root: INFO
+    com.hdl.springboot.labs.lab03.kafkademo: INFO
+    org:
+      springframework:
+        kafka: INFO # Prod: INFO để thấy lỗi recover/DLT; hạ WARN nếu log quá nhiều
+      apache:
+        kafka: WARN # Client Kafka ồn — WARN/ERROR thường đủ trên prod
+        kafka.clients.consumer: WARN
+        kafka.clients.producer: WARN

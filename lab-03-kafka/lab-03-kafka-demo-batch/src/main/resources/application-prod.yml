@@ -1,0 +1,80 @@
+# =============================================================================
+# Profile: prod — cấu hình Kafka hướng production (best practice tham khảo)
+# Module: lab-03-kafka-demo-batch
+# Kích hoạt: --spring.profiles.active=prod
+#             hoặc SPRING_PROFILES_ACTIVE=prod
+#
+# Lưu ý module batch (producer):
+# - Lab application.yml cố ý linger.ms=30000 để mắt thường thấy gom batch.
+#   Prod: linger nhỏ (vài–vài chục ms) + batch-size phù hợp throughput/latency —
+#   KHÔNG copy 30000 từ lab.
+# - batch-size đơn vị là byte (không phải số message).
+# - Đây là producer batching; không phải batch-consume (listener type: batch).
+# =============================================================================
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka-1:9092,kafka-2:9092,kafka-3:9092}
+
+    # ----- Client an toàn (bật khi cluster yêu cầu SASL/SSL; để comment nếu lab plaintext) -----
+    # security:
+    #   protocol: SASL_SSL
+    # properties:
+    #   sasl.mechanism: PLAIN
+    #   sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
+
+    producer:
+      acks: all
+      retries: ${KAFKA_PRODUCER_RETRIES:10}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      compression-type: lz4
+      # Prod: batch lớn hơn default lab (16384) để tăng throughput khi có tải.
+      batch-size: ${KAFKA_PRODUCER_BATCH_SIZE:65536}
+      buffer-memory: ${KAFKA_PRODUCER_BUFFER_MEMORY:67108864}
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        # Prod: vài ms — khác hẳn lab 30000.
+        linger.ms: ${KAFKA_PRODUCER_LINGER_MS:5}
+        delivery.timeout.ms: 120000
+        request.timeout.ms: 30000
+        max.block.ms: 60000
+
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:lab03-kafka-demo-batch}
+      enable-auto-commit: false
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      max-poll-records: 100
+      properties:
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 45000
+        heartbeat.interval.ms: 15000
+        spring:
+          json:
+            trusted:
+              packages: com.hdl.springboot.labs.lab03.kafkademo.message
+            use:
+              type:
+                headers: true
+
+    listener:
+      missing-topics-fatal: true
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+      ack-mode: BATCH
+      # single: một record / lần listener — khớp module (producer batch ≠ batch listen).
+      type: single
+
+logging:
+  level:
+    root: INFO
+    com.hdl.springboot.labs.lab03.kafkademo: INFO
+    org:
+      springframework:
+        kafka: INFO
+      apache:
+        kafka: WARN
+        kafka.clients.consumer: WARN
+        kafka.clients.producer: WARN

@@ -1,0 +1,14 @@
+spring:
+  # Cấu hình RabbitMQ, tương ứng với lớp cấu hình RabbitProperties
+  rabbitmq:
+    host: 127.0.0.1 # Địa chỉ của dịch vụ RabbitMQ
+    port: 5672 # Cổng của dịch vụ RabbitMQ
+    username: guest # Tài khoản của dịch vụ RabbitMQ
+    password: guest # Mật khẩu của dịch vụ RabbitMQ
+    listener:
+      type: simple # Chọn loại ListenerContainer. Mặc định là loại direct
+      simple:
+        concurrency: 2 # Số lượng thread xử lý đồng thời cho mỗi @ListenerContainer
+        max-concurrency: 10 # Số lượng thread xử lý đồng thời tối đa cho mỗi @ListenerContainer
+#      direct:
+#        consumers-per-queue: 2 # Với mỗi @RabbitListener và mỗi Queue, tạo bao nhiêu Consumer

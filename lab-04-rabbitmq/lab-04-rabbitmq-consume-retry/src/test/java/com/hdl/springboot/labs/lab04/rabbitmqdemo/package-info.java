@@ -1,0 +1,1 @@
+package com.hdl.springboot.labs.lab04.rabbitmqdemo;

@@ -1,0 +1,20 @@
+spring:
+  # Cấu hình RabbitMQ, tương ứng với lớp cấu hình RabbitProperties
+  rabbitmq:
+    host: 127.0.0.1 # Địa chỉ của dịch vụ RabbitMQ
+    port: 5672 # Cổng của dịch vụ RabbitMQ
+    username: guest # Tài khoản của dịch vụ RabbitMQ
+    password: guest # Mật khẩu của dịch vụ RabbitMQ
+    template:
+      # Tương ứng với lớp RabbitProperties.Retry
+      retry:
+        enabled: true # Bật cơ chế thử lại khi gửi
+        max-attempts: 3 # Số lần thử lại tối đa. Mặc định là 3.
+        initial-interval: 1000 # Khoảng thời gian giữa các lần thử lại, đơn vị là mili-giây. Mặc định là 1000.
+    listener:
+      simple:
+        # Tương ứng với lớp RabbitProperties.ListenerRetry
+        retry:
+          enabled: true # Bật cơ chế thử lại khi tiêu thụ
+          max-attempts: 3 # Số lần thử lại tối đa. Mặc định là 3.
+          initial-interval: 1000 # Khoảng thời gian giữa các lần thử lại, đơn vị là mili-giây. Mặc định là 1000.

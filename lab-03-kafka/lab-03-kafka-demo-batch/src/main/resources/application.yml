@@ -1,0 +1,64 @@
+spring:
+  # Các mục cấu hình Kafka, tương ứng với lớp cấu hình KafkaProperties
+  kafka:
+    bootstrap-servers: 127.0.0.1:9092 # Địa chỉ Kafka Broker, có thể cấu hình nhiều địa chỉ, ngăn cách bằng dấu phẩy
+
+    # Các mục cấu hình Kafka Producer
+    producer:
+      acks: 1 # 0 - không xác nhận; 1 - Leader xác nhận; all - tất cả Leader và Follower xác nhận
+      retries: 3 # Số lần thử gửi lại khi gửi message thất bại
+
+      # Cách serialize key của message
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+      # Cách serialize value của message
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      batch-size: 16384 # Kích thước tối đa của một batch message trước khi gửi
+
+      buffer-memory: 33554432 # Dung lượng bộ nhớ tối đa dùng để lưu các message chờ gửi
+
+      properties:
+        linger:
+          ms: 30000 # Thời gian chờ tối đa để gom message thành batch.
+            # Ở đây cấu hình 30 * 1000 ms = 30 giây.
+            # Sau 30 giây, dù batch chưa đạt batch-size,
+          # Producer vẫn gửi request.
+
+    # Các mục cấu hình Kafka Consumer
+    consumer:
+      auto-offset-reset: earliest # Khi Consumer Group chưa có offset,
+      # bắt đầu đọc message từ message đầu tiên
+
+      # Cách deserialize key của message
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+      # Cách deserialize value của message
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: com.hdl.springboot.labs.lab03.kafkademo.message
+              # Cho phép JsonDeserializer deserialize các class
+              # thuộc package này
+
+    # Cấu hình Kafka Consumer Listener
+    listener:
+      missing-topics-fatal: false
+      # Nếu topic mà Consumer Listener đăng ký không tồn tại,
+      # mặc định Spring Kafka sẽ báo lỗi.
+      # Đặt false để không báo lỗi nghiêm trọng khi topic chưa tồn tại.
+
+# Cấu hình logging
+logging:
+  level:
+    org:
+      springframework:
+        kafka: ERROR # Spring Kafka có quá nhiều log INFO,
+        # nên chỉ hiển thị log ERROR
+
+      apache:
+        kafka: ERROR # Kafka có quá nhiều log INFO,
+        # nên chỉ hiển thị log ERROR
