@@ -3,7 +3,7 @@
 > Tài liệu theo dõi lộ trình học từ yudao-labs. Có thể **cập nhật / tùy chỉnh** khi nhu cầu thay đổi.
 >
 > **Ngày tạo:** 2026-08-18 (~14:09 UTC+7)  
-> **Cập nhật lần cuối:** 2026-08-24  
+> **Cập nhật lần cuối:** 2026-08-27  
 > **Ước lượng tổng:** ~85–120 giờ (lộ trình tối ưu)  
 > **Stack HDL:** Java 21, Spring Boot **3.x** (target **3.5**) — không copy yudao 2.x nguyên si
 
@@ -193,10 +193,10 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 
 | # | Trạng thái | Lab yudao | Gợi ý | Giờ ước lượng | Kiến thức chính | Ghi chú / HDL module |
 |---|---|---|---|---|---|---|
-| 7 | - [ ] | `labx-01` + `labx-03` | Nacos discovery + OpenFeign (gộp 1 mini system) | 12–18h | Service registry, gọi theo service name, load balance, Feign | |
-| 8 | - [ ] | `labx-05` | Nacos Config | 6–10h | Config external, namespace/group, refresh | |
-| 9 | - [ ] | `labx-08` | Gateway demo cơ bản + route/filter | 12–18h | Spring Cloud Gateway, routing, filter | |
-| 10 | - [ ] | `labx-04` | Sentinel provider | 8–12h | QPS/thread limit, circuit break, degrade | Sau Gateway |
+| 7 | - [x] | `labx-01` + `labx-03` | Nacos discovery + OpenFeign (gộp 1 mini system) | 12–18h | Service registry, gọi theo service name, load balance, Feign | **3/3 bắt buộc xong.** HDL: `labx-01-spring-cloud-nacos-feign` (`provider` :8081, `consumer-discovery` :8082, `consumer-feign` :8083). Note: `Spring Cloud Nacos Feign.md`. |
+| 8 | - [x] | `labx-05` | Nacos Config | 6–10h | Config external, namespace/group, refresh | **2/2 bắt buộc xong.** HDL: `labx-05-spring-cloud-nacos-config` (`demo` :8084 public + refresh, `profiles` :8085 namespace `dev`). Note: `Spring Cloud Nacos Config.md`. |
+| 9 | - [x] | `labx-08` | Gateway demo cơ bản + route/filter + rate limit | 12–18h | Spring Cloud Gateway, routing, filter | **3/3 bắt buộc xong.** HDL: `labx-08-spring-cloud-gateway` (`static` :8086; `registry` :8087 `lb://`; `rate-limit` :8088 Redis **429**). Note: `Spring Cloud Gateway.md`. |
+| 10 | - [x] | `labx-04` | Sentinel provider | 8–12h | QPS/thread limit, circuit break, degrade | **nacos** :8090 xong (rule JSON Nacos, resource `/demo/echo`, `throw e` → `@ExceptionHandler`). Demo Dashboard skip. **Feign skip** (Sentinel trên RPC caller; OpenFeign đã ở #7; yudao `feign.hystrix` không copy Boot 3). Note: `Spring Cloud Sentinel.md` §9. **Pha 3 xong.** |
 
 **Lưu ý version:** yudao = Boot 2.2 + Cloud Hoxton + Alibaba 2.2. HDL = **Boot 3.5 + Cloud 2025 + Alibaba tương thích Boot 3**. Concept (discovery, config, gateway, Feign, Sentinel) giữ; starter và YAML khác — đối chiếu compatibility trước khi copy `pom`.
 
@@ -204,9 +204,13 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 
 - `labx-01-spring-cloud-alibaba-nacos-discovery/《芋道 Spring Cloud Alibaba 注册中心 Nacos 入门》.md`
 - `labx-03-spring-cloud-feign` (README Spring Cloud 专栏)
+- HDL note: `labx-01-spring-cloud-nacos-feign/Spring Cloud Nacos Feign.md`
 - `labx-05-spring-cloud-alibaba-nacos-config/《芋道 Spring Cloud Alibaba 配置中心 Nacos 入门》.md`
+- HDL note: `labx-05-spring-cloud-nacos-config/Spring Cloud Nacos Config.md`
 - `labx-08-spring-cloud-gateway/《芋道 Spring Cloud 网关 Spring Cloud Gateway 入门》.md`
+- HDL note: `labx-08-spring-cloud-gateway/Spring Cloud Gateway.md`
 - `labx-04-spring-cloud-alibaba-sentinel/《芋道 Spring Cloud Alibaba 服务容错 Sentinel 入门》.md`
+- HDL note: `labx-04-spring-cloud-alibaba-sentinel/Spring Cloud Sentinel.md`
 
 ---
 
@@ -214,8 +218,8 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 
 | # | Trạng thái | Lab yudao | Điều kiện | Giờ ước lượng | Kiến thức chính | Ghi chú / HDL module |
 |---|---|---|---|---|---|---|
-| 11 | - [ ] | `labx-11` Stream Kafka | Sau `lab-03` | 10–15h | Spring Cloud Stream, binder, concurrency trên abstraction | Có thể skip nếu đã vững Kafka client |
-| 12 | - [ ] | `lab-28` Job | Sau Redis (lock) | 8–12h | `@Scheduled`, Quartz / XXL-JOB, job đa instance | |
+| 11 | - [ ] | `labx-11` Stream Kafka | Sau `lab-03` | 10–15h | Spring Cloud Stream, binder, concurrency trên abstraction | **skip** — đã vững `lab-03` spring-kafka; abstraction ROI thấp |
+| 12 | - [x] | `lab-28` Job | Sau Redis (lock) | 8–12h | `@Scheduled`, Quartz JDBC cluster, job đa instance | HDL: `lab-28-task` (`demo` + `quartz-jdbc` ✅). **memory skip.** **XXL-JOB skip.** Note: `Spring Boot Job.md`. **Pha 4 xong.** |
 
 ---
 
@@ -234,8 +238,8 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 | Config center | `labx-05` | 3 |
 | API gateway | `labx-08` | 3 |
 | Flow control / circuit break | `labx-04` | 3 |
-| MQ qua Spring Cloud Stream | `labx-11` | 4 |
-| Scheduled / distributed job | `lab-28` | 4 |
+| MQ qua Spring Cloud Stream | `labx-11` — **skip** | 4 |
+| Scheduled / distributed job | `lab-28` ✅ | 4 |
 
 ---
 
@@ -275,9 +279,11 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 |---|---|---|---|
 | Pha 1 | 4 | 4 / 4 | 100% |
 | Pha 2 | 2 | 2 / 2 | 100% |
-| Pha 3 | 4 | 0 / 4 | 0% |
-| Pha 4 | 2 | 0 / 2 | 0% |
-| **Tổng** | **12** | **6 / 12** | **50%** |
+| Pha 3 | 4 | 4 / 4 | 100% |
+| Pha 4 | 2 | 1 / 2 (+ #11 skip) | 100%* |
+| **Tổng** | **12** | **11 / 12** | **92%** |
+
+\* Pha 4: block #12 xong; #11 skip có lý do — coi lộ trình chính **đóng**.
 
 > Cập nhật bảng trên khi đánh dấu checkbox.
 
@@ -326,3 +332,12 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 | 2026-08-24 | `lab-03` batch xong (producer `linger.ms`/`batch.size`, topic `DEMO_05`, log ~+30s rồi 3 ack cùng lúc). Cập nhật `Spring Kafka.md` §9. **Lab-03 + Pha 2 xong.** Tiếp: Pha 3 Nacos + Feign. |
 | 2026-08-24 | Ghi slot **bổ sung MQ**: Rabbit `confirm` / `confirm-async` (sau Pha 2 bắt buộc; không đếm 12 block; không chặn Pha 3). |
 | 2026-08-24 | Header: thêm **Ngày tạo** 2026-08-18; **Cập nhật lần cuối** → 2026-08-24. |
+| 2026-08-25 | Block #7 xong: mini system Nacos + Feign (`provider` / `consumer-discovery` / `consumer-feign`). Note: `Spring Cloud Nacos Feign.md`. **Pha 3 1/4.** Tiếp: `labx-05` Config. |
+| 2026-08-25 | Block #8 xong: Nacos Config (`demo` :8084 refresh `@Value`; `profiles` :8085 namespace `dev` → `10/1`). Note: `Spring Cloud Nacos Config.md`. **Pha 3 2/4.** Tiếp: `labx-08` Gateway. |
+| 2026-08-25 | `labx-08` **static** xong (`:8086/api/echo` → `:8081/echo`). Note: `Spring Cloud Gateway.md`. **#9 1/3.** Tiếp: `registry`. |
+| 2026-08-25 | `labx-08` **registry** xong (`:8087/lb/echo` → Nacos `demo-provider` → `:8081/echo`, body trùng). Note: `Spring Cloud Gateway.md` §5 (yaml lab + locator `prod` chưa curl). **#9 2/3.** Tiếp: `rate-limit`. |
+| 2026-08-26 | `labx-08` **rate-limit** xong (`:8088/api/echo` burst 2 → **429**; Redis `:6379`). Note: `Spring Cloud Gateway.md` §6. `application-prod.yml` đĩa = `default-filters` + 1 route tĩnh (pom **chưa** Nacos/locator). **#9 3/3. Pha 3 3/4.** Tiếp: Sentinel `labx-04`. |
+| 2026-08-26 | `labx-04` **nacos** xong (`:8090/demo/echo` QPS 1 → JSON `code` 1024; resource v6x = `/demo/echo`; `throw e` + `basePackages` `sentinelnacos`). Demo Dashboard skip. Note: `Spring Cloud Sentinel.md`. **#10 chưa đóng.** Tiếp: `feign`. |
+| 2026-08-26 | `labx-04` **Feign skip** (Sentinel trên RPC caller; OpenFeign đã #7; không copy `feign.hystrix`). **#10 đóng. Pha 3 4/4.** Note: `Spring Cloud Sentinel.md` §9. Tiếp: Pha 4 `labx-11` Stream (tùy) hoặc `lab-28` Job. |
+| 2026-08-26 | Thêm `docs/phase-3-summary.md` — tổng kết Pha 3. |
+| 2026-08-27 | **#11 Stream skip** (đã vững `lab-03`). **#12 `lab-28` xong:** `task-demo` + `quartz-jdbc` cluster; quartz-memory + XXL-JOB skip. Note: `lab-28-task/Spring Boot Job.md`. **Pha 4 xong.** Thêm `docs/phase-4-summary.md`. **Lộ trình 12 block đóng** (11 xong + 1 skip). |

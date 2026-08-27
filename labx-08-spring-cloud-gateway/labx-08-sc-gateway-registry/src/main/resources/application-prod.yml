@@ -1,0 +1,40 @@
+# Profile prod — Gateway lấy danh sách service từ Nacos, không ghi từng uri: lb:// trong yaml.
+# Chạy: --spring.profiles.active=prod
+# Docs: https://docs.spring.io/spring-cloud-gateway/reference/4.3/spring-cloud-gateway-server-webflux/the-discoveryclient-route-definition-locator.html
+# Client: GET /{serviceId}/echo?...  ví dụ /demo-provider/echo?name=long
+# Locator mặc định tắt; prefix Cloud 2025: spring.cloud.gateway.server.webflux.discovery.locator
+
+server:
+  port: ${SERVER_PORT:8087}
+
+spring:
+  cloud:
+    nacos:
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        # Không set discovery.ip: trên K8s/VM, client tự đăng ký IP instance.
+    gateway:
+      server:
+        webflux:
+          # Bỏ route /lb/** của application.yml (lab). Prod dùng locator.
+          routes: []
+          discovery:
+            locator:
+              enabled: true
+              # Mặc định true = mọi service trên Nacos đều có /{serviceId}/**.
+              # Loại chính Gateway, tránh vòng /gateway-registry/**
+              include-expression: "serviceId != 'gateway-registry'"
+              # Siết hơn (bật khi service gắn metadata edge=true trên Nacos):
+              # include-expression: "metadata['edge']=='true'"
+              url-expression: "'lb://' + serviceId"
+          # Đứng sau Nginx/Ingress thì set regex IP proxy tin cậy (Cloud 2025, X-Forwarded mặc định tắt):
+          # trusted-proxies: ${GATEWAY_TRUSTED_PROXIES}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+    com.alibaba.nacos: WARN

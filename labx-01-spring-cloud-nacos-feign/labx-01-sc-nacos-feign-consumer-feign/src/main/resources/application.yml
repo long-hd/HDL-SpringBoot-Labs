@@ -1,0 +1,23 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: demo-consumer-feign
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        server-addr: 127.0.0.1:8848
+        ip: 127.0.0.1
+        service: ${spring.application.name}
+    openfeign:
+      client:
+        config:
+          default:
+            logger-level: full
+
+logging:
+  level:
+    com.hdl.springboot.labs.labx01.nacosdemo.consumer.feign: DEBUG

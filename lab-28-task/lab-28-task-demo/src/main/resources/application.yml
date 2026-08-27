@@ -1,0 +1,19 @@
+spring:
+  task:
+    # Cấu hình Spring Task (@Scheduled).
+    # Bind vào TaskSchedulingProperties — prefix: spring.task.scheduling
+    # Auto-config: TaskSchedulingAutoConfiguration → bean ThreadPoolTaskScheduler
+    scheduling:
+      # Tiền tố tên thread trong log (mặc định: scheduling-)
+      # Ví log: [hdl-demo-1] thay vì [scheduling-1]
+      thread-name-prefix: hdl-demo-
+
+      pool:
+        # Số thread tối đa cho mọi @Scheduled trong app (mặc định: 1)
+        size: 10
+
+      shutdown:
+        # true: khi shutdown, đợi task đang chạy xong rồi mới destroy bean
+        await-termination: true
+        # Boot 3.5: kiểu Duration — dùng 60s (yudao Boot 2 ghi số 60 = giây)
+        await-termination-period: 60s

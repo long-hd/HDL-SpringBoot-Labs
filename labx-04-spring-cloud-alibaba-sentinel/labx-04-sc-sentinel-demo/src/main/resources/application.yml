@@ -1,0 +1,20 @@
+# Lab sentinel-demo: chặn TRONG service :8089, không phải Gateway :8088.
+# Chưa có rule trên Dashboard thì /demo/echo luôn vào controller.
+# Rule UI = memory: restart app thì mất (module nacos mới persist).
+server:
+  port: 8089
+
+spring:
+  application:
+    # Tên hiện trên Dashboard. Không đặt demo-provider — trùng Nacos app :8081.
+    name: sentinel-demo
+  cloud:
+    sentinel:
+      enabled: true
+      # true = nối Dashboard lúc start. false = đợi request đầu mới đăng ký (dễ tưởng app "mất").
+      eager: true
+      transport:
+        dashboard: 127.0.0.1:7070
+      filter:
+        # Intercept MVC. Resource v6x = path /demo/echo (không GET:/demo/echo).
+        url-patterns: /**

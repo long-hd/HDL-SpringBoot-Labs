@@ -1,0 +1,23 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: gateway-registry
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        server-addr: 127.0.0.1:8848
+        ip: 127.0.0.1
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: demo-provider-lb
+              uri: lb://demo-provider
+              predicates:
+                - Path=/lb/**
+              filters:
+                - StripPrefix=1

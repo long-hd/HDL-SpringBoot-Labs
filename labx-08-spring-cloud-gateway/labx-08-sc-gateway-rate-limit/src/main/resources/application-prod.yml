@@ -1,0 +1,77 @@
+# Profile prod — limiter viết MỘT LẦN (default-filters), không copy RequestRateLimiter vào từng route.
+# Chạy: --spring.profiles.active=prod
+#
+# Lab (application.yml): filter nằm TRONG một route /api/**, burstCapacity 2 cho dễ curl 429.
+# File này: cùng ý Redis token bucket, khác chỗ gắn filter.
+#
+# Docs:
+#   RequestRateLimiter: https://docs.spring.io/spring-cloud-gateway/reference/4.3/spring-cloud-gateway-server-webflux/gatewayfilter-factories/requestratelimiter-factory.html
+#   default-filters (mọi route): https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-webflux/gatewayfilter-factories/default-filters.html
+#   Cloud 2025 prefix: spring.cloud.gateway.server.webflux  (không phải spring.cloud.gateway.routes kiểu Hoxton)
+#
+# Module này KHÔNG có nacos-discovery / loadbalancer trên pom. Không bật discovery.locator ở đây
+# (locator nằm lab registry). Muốn vừa locator vừa limiter: gộp starter, không phải chỉ copy yaml này.
+#
+# File này KHÔNG phải checklist production (thiếu TLS, auth, secret Redis thật, HA Gateway).
+
+server:
+  port: ${SERVER_PORT:8088}
+
+spring:
+  data:
+    redis:
+      # Boot 3: spring.data.redis — không phải spring.redis của yudao 2.x.
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      # Password trống = Redis lab không auth. Prod set REDIS_PASSWORD, đừng commit secret.
+      password: ${REDIS_PASSWORD:}
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Áp MỌI route (yaml dưới + route Java nếu có). Một trăm backend cùng hạn → không copy 100 khối limiter.
+          # Key vẫn là bean ipKeyResolver (RateLimiterConfig). Đổi sang user/API key thì sửa Java, không sửa 100 route.
+          default-filters:
+            - name: RequestRateLimiter
+              args:
+                # Token mỗi giây. Số dưới là VÍ DỤ đọc file, không phải SLA công ty.
+                redis-rate-limiter.replenishRate: ${GATEWAY_REPLENISH_RATE:10}
+                # Bucket tối đa. = replenishRate thì không burst; lớn hơn thì cho nổ ngắn.
+                redis-rate-limiter.burstCapacity: ${GATEWAY_BURST_CAPACITY:20}
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
+          # List routes ở profile SAU thay list application.yml (Boot không merge từng phần tử).
+          # Bắt buộc khai báo lại route lab: nếu giữ nguyên application.yml thì route đó CÒN RequestRateLimiter
+          # → filter chạy hai lần (default + route).
+          routes:
+            - id: demo-provider-rate-limit
+              uri: ${PROVIDER_URI:http://127.0.0.1:8081}
+              predicates:
+                - Path=/api/**
+              filters:
+                - StripPrefix=1
+                # Không gắn RequestRateLimiter ở đây — đã có default-filters.
+
+            # Ví DỤ hạn KHÁC một path (SMS). Bỏ comment khi cần; không comment thì default-filters (10/20) vẫn áp path này.
+            # - id: sms-stricter
+            #   uri: ${SMS_URI:http://127.0.0.1:8081}
+            #   predicates:
+            #     - Path=/sms/**
+            #   filters:
+            #     - StripPrefix=1
+            #     - name: RequestRateLimiter
+            #       args:
+            #         redis-rate-limiter.replenishRate: 1
+            #         redis-rate-limiter.burstCapacity: 1
+            #         key-resolver: "#{@ipKeyResolver}"
+
+          # ipKeyResolver đọc remoteAddress TCP. Sau Nginx, IP client nằm X-Forwarded-For;
+          # Cloud 2025 không tin header đó trừ khi set trusted-proxies (regex IP proxy).
+          # Không set = mọi client sau cùng một Nginx có thể CHUNG một bucket (IP = Nginx).
+          # trusted-proxies: ${GATEWAY_TRUSTED_PROXIES}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO

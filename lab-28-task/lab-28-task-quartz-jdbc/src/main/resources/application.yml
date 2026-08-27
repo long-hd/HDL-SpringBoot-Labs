@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    # DB nghiệp vụ giả lập — @Primary userDataSource
+    user:
+      url: jdbc:mysql://127.0.0.1:3306/lab-28-quartz-jdbc-user?useSSL=false&useUnicode=true&characterEncoding=UTF-8
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      username: root
+      password: 123456789
+
+    # DB riêng cho Quartz — @QuartzDataSource quartzDataSource
+    # Phải có bảng QRTZ_* (script tables_mysql_innodb.sql)
+    quartz:
+      url: jdbc:mysql://127.0.0.1:3306/lab-28-quartz-jdbc-quartz?useSSL=false&useUnicode=true&characterEncoding=UTF-8
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      username: root
+      password: 123456789
+
+  # Bind QuartzProperties — prefix spring.quartz
+  quartz:
+    # Tên cluster; mọi instance phải giống nhau → cột SCHED_NAME trong QRTZ_*
+    scheduler-name: clusteredScheduler
+    job-store-type: jdbc
+    auto-startup: true
+    startup-delay: 0
+    wait-for-jobs-to-complete-on-shutdown: true
+    overwrite-existing-jobs: false
+    properties:
+      org:
+        quartz:
+          jobStore:
+            # Boot 3: @QuartzDataSource bean được gắn qua SchedulerFactoryBean — KHÔNG set
+            # jobStore.dataSource ở đây (Quartz sẽ tìm DBConnectionManager → lỗi "no DataSource named …").
+            tablePrefix: QRTZ_
+            isClustered: true
+            clusterCheckinInterval: 1000
+            useProperties: false
+          threadPool:
+            threadCount: 25
+            threadPriority: 5
+            class: org.quartz.simpl.SimpleThreadPool
+    jdbc:
+      # never = không auto DDL; tạo bảng bằng script thủ công
+      initialize-schema: never

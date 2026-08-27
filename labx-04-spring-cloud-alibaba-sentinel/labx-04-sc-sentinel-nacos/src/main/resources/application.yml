@@ -1,0 +1,42 @@
+# Rule FLOW nằm Nacos, không RAM Dashboard. Restart :8090 vẫn chặn nếu JSON còn.
+# Nacos UI :18080 — tạo config TRƯỚC khi start app (datasource đọc lúc lên).
+#
+# Data ID: sentinel-nacos-flow-rule
+# Group:   DEFAULT_GROUP
+# Format:  JSON
+# Namespace: public (trống)
+#
+# resource v6x = path /demo/echo (không phải GET:/demo/echo):
+# [
+#   {
+#     "resource": "/demo/echo",
+#     "limitApp": "default",
+#     "grade": 1,
+#     "count": 1
+#   }
+# ]
+# grade 1 = QPS; count 1 = 1 req/giây.
+
+server:
+  port: 8090
+
+spring:
+  application:
+    name: sentinel-nacos
+  cloud:
+    sentinel:
+      enabled: true
+      eager: true
+      filter:
+        url-patterns: /**
+      datasource:
+        ds1:
+          nacos:
+            server-addr: 127.0.0.1:8848
+            username: nacos
+            password: nacos
+            namespace:
+            group-id: DEFAULT_GROUP
+            data-id: sentinel-nacos-flow-rule
+            data-type: json
+            rule-type: FLOW

@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: demo-provider
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        server-addr: 127.0.0.1:8848
+        ip: 127.0.0.1   # app chạy trên host, Nacos trong Podman
+
+server:
+  port: 8081

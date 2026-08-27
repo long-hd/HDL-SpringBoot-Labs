@@ -26,10 +26,32 @@
     <file url="file://$PROJECT_DIR$/lab-26-distributed-session/lab-26-distributed-session-springsecurity/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lab-26-distributed-session/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lab-26-distributed-session/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lab-28-task/lab-28-task-demo/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lab-28-task/lab-28-task-quartz-jdbc/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lab-28-task/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lab-28-task/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lab-29-async/lab-29-async-basic/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lab-29-async/lab-29-async-multi-executor/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lab-29-async/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lab-29-async/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-01-spring-cloud-nacos-feign/labx-01-sc-nacos-feign-consumer-discovery/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-01-spring-cloud-nacos-feign/labx-01-sc-nacos-feign-consumer-feign/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-01-spring-cloud-nacos-feign/labx-01-sc-nacos-feign-provider/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-01-spring-cloud-nacos-feign/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-01-spring-cloud-nacos-feign/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-04-spring-cloud-alibaba-sentinel/labx-04-sc-sentinel-demo/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-04-spring-cloud-alibaba-sentinel/labx-04-sc-sentinel-nacos/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-04-spring-cloud-alibaba-sentinel/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-04-spring-cloud-alibaba-sentinel/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-05-spring-cloud-nacos-config/labx-05-sc-nacos-config-demo/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-05-spring-cloud-nacos-config/labx-05-sc-nacos-config-profiles/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-05-spring-cloud-nacos-config/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-05-spring-cloud-nacos-config/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-08-spring-cloud-gateway/labx-08-sc-gateway-rate-limit/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-08-spring-cloud-gateway/labx-08-sc-gateway-registry/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-08-spring-cloud-gateway/labx-08-sc-gateway-static/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-08-spring-cloud-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/labx-08-spring-cloud-gateway/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>

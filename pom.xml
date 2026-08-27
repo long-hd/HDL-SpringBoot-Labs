@@ -21,7 +21,13 @@
         <module>lab-04-rabbitmq</module>
         <module>lab-11-spring-data-redis</module>
         <module>lab-26-distributed-session</module>
+        <module>lab-28-task</module>
         <module>lab-29-async</module>
+
+        <module>labx-01-spring-cloud-nacos-feign</module>
+        <module>labx-04-spring-cloud-alibaba-sentinel</module>
+        <module>labx-05-spring-cloud-nacos-config</module>
+        <module>labx-08-spring-cloud-gateway</module>
     </modules>
 
 </project>

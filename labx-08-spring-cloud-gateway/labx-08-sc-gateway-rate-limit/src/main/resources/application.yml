@@ -1,0 +1,26 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: gateway-rate-limit
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: demo-provider-rate-limit
+              uri: http://127.0.0.1:8081
+              predicates:
+                - Path=/api/**
+              filters:
+                - StripPrefix=1
+                - name: RequestRateLimiter
+                  args:
+                    redis-rate-limiter.replenishRate: 1
+                    redis-rate-limiter.burstCapacity: 2
+                    key-resolver: "#{@ipKeyResolver}"

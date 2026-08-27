@@ -13,7 +13,7 @@
 ```text
 Pha 1  Nền (1 process)     Redis → Security → Session → Async   ✅
 Pha 2  Message              RabbitMQ → Kafka                     ✅ (2026-08-24)
-Pha 3  Spring Cloud         Nacos · Feign · Gateway · Sentinel   ← tiếp theo
+Pha 3  Spring Cloud         Nacos · Feign · Config · Gateway · Sentinel   ✅ #7–#10 (Feign-Sentinel skip)
 Pha 4  Mở rộng              Stream · Job
 ```
 
@@ -140,10 +140,7 @@ Tự trả lời được:
 
 ---
 
-## 8. Tiếp theo — Pha 3 (Pha 2 đã xong)
+## 8. Tiếp theo
 
-**Pha 2 Message:** RabbitMQ → Kafka — **xong** (xem `learning-path.md`).
-
-**Pha 3:** Nacos discovery + OpenFeign → Config → Gateway → Sentinel.
-
-Khi bắt đầu: overview `labx-01` / `labx-03`; đối chiếu Cloud version khớp Boot **3.5** (không copy Hoxton / Boot 2.x).
+**Pha 2** — [phase-2-summary.md](./phase-2-summary.md).  
+**Pha 3** — xong 2026-08-26, [phase-3-summary.md](./phase-3-summary.md). **Tiếp:** Pha 4.

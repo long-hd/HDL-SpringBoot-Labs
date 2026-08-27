@@ -1,0 +1,17 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: gateway-static
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: demo-provider-static
+              uri: http://127.0.0.1:8081
+              predicates:
+                - Path=/api/**
+              filters:
+                - StripPrefix=1
