@@ -1,0 +1,31 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: account-service
+
+  datasource:
+    # DB RIÊNG của account-service (database-per-service). transfer-service KHÔNG được
+    # nối trực tiếp vào DB này — muốn dữ liệu tài khoản thì gọi API, không join chéo.
+    url: jdbc:postgresql://localhost:5432/account_db
+    username: postgres
+    password: 123456789
+
+  jpa:
+    hibernate:
+      # BƯỚC 0 dùng 'update' cho nhanh (Hibernate tự tạo/cập nhật bảng theo entity).
+      # Ở dự án thật nên dùng Flyway/Liquibase để quản migration có kiểm soát —
+      # sẽ cân nhắc chuyển ở bước sau.
+      ddl-auto: update
+    # Cho phép data.sql chạy SAU khi Hibernate tạo bảng (nếu không, seed sẽ lỗi vì
+    # bảng chưa tồn tại lúc data.sql chạy).
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      # Luôn chạy data.sql để seed vài tài khoản mẫu mỗi lần khởi động.
+      mode: always

@@ -13,8 +13,8 @@
 ```text
 Pha 1  Nền (1 process)     Redis → Security → Session → Async   ✅ (2026-08-21)
 Pha 2  Message              RabbitMQ → Kafka                     ✅ (2026-08-24)
-Pha 3  Spring Cloud         Nacos · Feign · Config · Gateway · Sentinel   ✅ #7–#10 (Feign-Sentinel skip)
-Pha 4  Mở rộng              Stream · Job
+Pha 3  Spring Cloud         Nacos · Feign · Config · Gateway · Sentinel   ✅ (2026-08-26)
+Pha 4  Mở rộng              Stream skip · Job ✅ (2026-08-27)
 ```
 
 **Kết quả pha (theo lộ trình):**  
@@ -202,7 +202,9 @@ flowchart LR
 **Block #7** (Nacos Discovery + Feign) **xong** 2026-08-25. Note: [Spring Cloud Nacos Feign.md](../labx-01-spring-cloud-nacos-feign/Spring%20Cloud%20Nacos%20Feign.md).  
 **Block #8** (Nacos Config) **xong** 2026-08-25. Note: [Spring Cloud Nacos Config.md](../labx-05-spring-cloud-nacos-config/Spring%20Cloud%20Nacos%20Config.md).  
 **Block #9** (Gateway) **3/3** — `static` :8086, `registry` :8087, `rate-limit` :8088 xong. Note: [Spring Cloud Gateway.md](../labx-08-spring-cloud-gateway/Spring%20Cloud%20Gateway.md).  
-**Block #10** (Sentinel) — **nacos** :8090 xong; **Feign skip**. Note: [Spring Cloud Sentinel.md](../labx-04-spring-cloud-alibaba-sentinel/Spring%20Cloud%20Sentinel.md) §9. **Pha 3 xong.** **Tiếp:** Pha 4 (`labx-11` Stream / `lab-28` Job).
+**Block #10** (Sentinel) — **nacos** :8090 xong; **Feign skip**. Note: [Spring Cloud Sentinel.md](../labx-04-spring-cloud-alibaba-sentinel/Spring%20Cloud%20Sentinel.md) §9. **Pha 3 xong** 2026-08-26.
+
+**Pha 4:** #11 Stream **skip** (đủ #6 `lab-03-kafka`); #12 Job **xong** 2026-08-27 — [phase-4-summary.md](./phase-4-summary.md), [Spring Boot Job.md](../lab-28-task/Spring%20Boot%20Job.md).
 
 ---
 
@@ -221,5 +223,5 @@ flowchart LR
 
 ---
 
-**Cập nhật lần cuối:** 2026-08-25  
+**Cập nhật lần cuối:** 2026-08-27  
 **Tác giả:** HDL Spring Boot Labs

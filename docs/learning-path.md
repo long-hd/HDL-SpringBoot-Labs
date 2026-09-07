@@ -56,7 +56,7 @@ Trong lab lớn (`lab-03`, `lab-04`, `lab-11`…): chỉ **bắt buộc** submod
 Pha 1  Nền (1 process)     Redis → Security → Session → Async
 Pha 2  Message              RabbitMQ → Kafka
 Pha 3  Spring Cloud         Nacos+Feign → Config → Gateway → Sentinel
-Pha 4  Mở rộng              Stream (Kafka) · Job (khi cần)
+Pha 4  Mở rộng              Stream skip · Job ✅ (2026-08-27)
 ```
 
 ```mermaid
@@ -89,13 +89,13 @@ flowchart TD
     end
 
     subgraph P4["Pha 4 — Mở rộng"]
-        LX11[labx-11 Stream]
-        L28[lab-28 Job]
+        LX11["labx-11 Stream skip"]
+        L28["lab-28 Job ✅"]
     end
 
     P1 --> P2
     P2 --> P3
-    L03 --> LX11
+    L03 -.->|"đủ thay Stream"| LX11
     L11 --> L28
 ```
 
@@ -161,7 +161,7 @@ Khi review code HDL: ưu tiên API 3.5, không “dịch nguyên văn” class 2
 | # | Trạng thái | Lab yudao | Submodule tối thiểu | Giờ ước lượng | Kiến thức chính | Ghi chú / HDL module |
 |---|---|---|---|---|---|---|
 | 5 | - [x] | `lab-04-rabbitmq` | `demo` → `ack` → `consume-retry` → `concurrency` → `orderly` | 15–25h | Exchange/queue, ack, DLQ/retry, nhiều consumer, **thứ tự vs song song** | **5/5 bắt buộc xong.** Note: `Spring RabbitMQ.md`. Bổ sung publisher confirm: xem mục dưới. |
-| 6 | - [x] | `lab-03-kafka` | `demo` → `ack` → `concurrency` → `batch` | 15–25h | Topic/partition, consumer group, offset, scale partition, batch | **4/4 bắt buộc xong.** Note: `Spring Kafka.md` §9. **Pha 2 bắt buộc xong.** Tiếp mặc định: Pha 3. |
+| 6 | - [x] | `lab-03-kafka` | `demo` → `ack` → `concurrency` → `batch` | 15–25h | Topic/partition, consumer group, offset, scale partition, batch | **4/4 bắt buộc xong.** HDL: `lab-03-kafka` (`demo`, `demo-ack`, `demo-concurrency`, `demo-batch`). Note: [Spring Kafka.md](../lab-03-kafka/Spring%20Kafka.md). **Pha 2 xong** 2026-08-24. Thay thế nhu cầu `labx-11` Stream (#11 skip). |
 
 **Thứ tự:** Rabbit trước (queue dễ hình dung) → Kafka (partition, log).
 
@@ -218,7 +218,7 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 
 | # | Trạng thái | Lab yudao | Điều kiện | Giờ ước lượng | Kiến thức chính | Ghi chú / HDL module |
 |---|---|---|---|---|---|---|
-| 11 | - [ ] | `labx-11` Stream Kafka | Sau `lab-03` | 10–15h | Spring Cloud Stream, binder, concurrency trên abstraction | **skip** — đã vững `lab-03` spring-kafka; abstraction ROI thấp |
+| 11 | - [ ] | `labx-11` Stream Kafka | Sau `lab-03` | 10–15h | Spring Cloud Stream, binder, concurrency trên abstraction | **skip** 2026-08-27 — **#6 `lab-03-kafka` 4/4** (`spring-kafka` trực tiếp) đủ prod; Stream = abstraction mỏng, ROI thấp |
 | 12 | - [x] | `lab-28` Job | Sau Redis (lock) | 8–12h | `@Scheduled`, Quartz JDBC cluster, job đa instance | HDL: `lab-28-task` (`demo` + `quartz-jdbc` ✅). **memory skip.** **XXL-JOB skip.** Note: `Spring Boot Job.md`. **Pha 4 xong.** |
 
 ---
@@ -233,12 +233,12 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 | Thread pool / async trong app | `lab-29` | 1 |
 | Work queue, retry, DLQ | `lab-04` (bắt buộc) | 2 |
 | Publisher confirm (Rabbit gửi) | `lab-04` confirm / confirm-async — **bổ sung**, không đếm block | 2* |
-| Event log, partition, consumer group | `lab-03` | 2 |
+| Event log, partition, consumer group | `lab-03` ✅ (`demo`/`ack`/`concurrency`/`batch`) | 2 |
 | Service discovery + gọi service | `labx-01` + `labx-03` | 3 |
 | Config center | `labx-05` | 3 |
 | API gateway | `labx-08` | 3 |
 | Flow control / circuit break | `labx-04` | 3 |
-| MQ qua Spring Cloud Stream | `labx-11` — **skip** | 4 |
+| MQ qua Spring Cloud Stream | `labx-11` — **skip** (thay bằng `lab-03` client) | 4 |
 | Scheduled / distributed job | `lab-28` ✅ | 4 |
 
 ---
@@ -249,7 +249,7 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 |---|---|---|
 | `lab-11` Redis | `lab-26`, lock trong job, rate limit | Redis là hạ tầng chung |
 | `lab-01` Security | `lab-26` | Session + auth |
-| `lab-04` / `lab-03` client | `labx-11` Stream | Stream là abstraction trên broker |
+| `lab-03` Kafka client (#6) | `labx-11` Stream (#11 skip) | Stream là abstraction trên broker — HDL dùng trực tiếp `spring-kafka` |
 | 1 app + MQ cơ bản | `labx-01` Nacos | Cloud = nhiều service |
 | Nacos + Feign | Gateway, Sentinel | Route theo service name; limit traffic |
 | `lab-29` Async | Consumer MQ (tùy chọn) | Cùng mô hình thread pool |
@@ -340,4 +340,4 @@ Sau khi **bắt buộc** Pha 2 xong; **không** chặn Pha 3. Làm khi cần đ�
 | 2026-08-26 | `labx-04` **nacos** xong (`:8090/demo/echo` QPS 1 → JSON `code` 1024; resource v6x = `/demo/echo`; `throw e` + `basePackages` `sentinelnacos`). Demo Dashboard skip. Note: `Spring Cloud Sentinel.md`. **#10 chưa đóng.** Tiếp: `feign`. |
 | 2026-08-26 | `labx-04` **Feign skip** (Sentinel trên RPC caller; OpenFeign đã #7; không copy `feign.hystrix`). **#10 đóng. Pha 3 4/4.** Note: `Spring Cloud Sentinel.md` §9. Tiếp: Pha 4 `labx-11` Stream (tùy) hoặc `lab-28` Job. |
 | 2026-08-26 | Thêm `docs/phase-3-summary.md` — tổng kết Pha 3. |
-| 2026-08-27 | **#11 Stream skip** (đã vững `lab-03`). **#12 `lab-28` xong:** `task-demo` + `quartz-jdbc` cluster; quartz-memory + XXL-JOB skip. Note: `lab-28-task/Spring Boot Job.md`. **Pha 4 xong.** Thêm `docs/phase-4-summary.md`. **Lộ trình 12 block đóng** (11 xong + 1 skip). |
+| 2026-08-27 | **#11 Stream skip** (đã vững **#6 `lab-03-kafka` 4/4**). **#12 `lab-28` xong.** Note: `Spring Boot Job.md`, `phase-4-summary.md`. Bổ sung learning-path: HDL module Kafka, mermaid Stream skip, liên kết #6↔#11. **Lộ trình 12 block đóng.** |

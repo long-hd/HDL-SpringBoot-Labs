@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hdl.mt</groupId>
+        <artifactId>system-money-transfer-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>account-service-api</artifactId>
+    <name>account-service-api</name>
+    <!--
+      Đây là "hợp đồng" (contract) mà account-service phơi ra cho service khác dùng.
+      CÁCH A đã chốt: các DTO nằm ở một jar chung; server implement, client add
+      dependency để dùng lại -> đổi contract thì đôi bên báo lỗi COMPILE ngay, không
+      phải chờ tới runtime mới lộ mismatch.
+
+      BƯỚC 0: module này CỐ Ý giữ mỏng, chỉ có DTO thuần (Java record), không kéo
+      Spring/JPA. Tới BƯỚC 2 (nối client) ta mới thêm interface @HttpExchange vào đây
+      + dependency spring-web, để cùng một interface dùng được cả server lẫn client.
+    -->
+
+    <!-- Không có dependency nào ở bước 0: chỉ toàn record thuần. -->
+
+</project>

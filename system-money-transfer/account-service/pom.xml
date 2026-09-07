@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hdl.mt</groupId>
+        <artifactId>system-money-transfer-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>account-service</artifactId>
+    <name>account-service</name>
+    <description>Giữ số dư từng tài khoản; xử lý lệnh trừ/cộng tiền. DB riêng (account_db).</description>
+
+    <dependencies>
+        <!-- REST controller + RestClient -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- JPA để lưu Account xuống Postgres -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- Driver Postgres (chỉ cần lúc chạy) -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!--
+          Contract chung (cách A): account-service IMPLEMENT các DTO này ở controller.
+          transfer-service cũng add đúng jar này để đọc/gửi cùng định nghĩa.
+        -->
+        <dependency>
+            <groupId>com.hdl.mt</groupId>
+            <artifactId>account-service-api</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Đóng gói jar chạy được + hỗ trợ `mvn spring-boot:run` -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

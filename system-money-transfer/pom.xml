@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      ============================================================================
+      PARENT POM của khu system-money-transfer.
+
+      Vì sao có file này (đây là điểm khác với các lab rời trong repo):
+      - Các lab rời khai version ở từng leaf vì chúng chạy độc lập, lệch version
+        cũng không sao. Nhưng ở khu này nhiều service CHẠY CÙNG NHAU và phải tương
+        thích với nhau, nên ta gom toàn bộ version về MỘT chỗ (BOM tập trung) để
+        không bao giờ có chuyện order-service dùng Cloud 2025.0.3 còn service khác
+        lỡ dùng bản khác -> loại hẳn lớp bug tương thích khó truy.
+      - Kế thừa version từ parent KHÔNG ngăn service chạy độc lập: mỗi service vẫn
+        `mvn spring-boot:run` riêng được, chỉ cần `mvn -N install` parent này một lần.
+      ============================================================================
+    -->
+
+    <!--
+      Parent của parent = spring-boot-starter-parent: nó quản sẵn version của toàn bộ
+      thư viện Spring Boot + cấu hình plugin (spring-boot-maven-plugin, compiler...).
+      Ta chỉ cần kế thừa, không khai lại từng version.
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.14</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.hdl.mt</groupId>
+    <artifactId>system-money-transfer-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>system-money-transfer-parent</name>
+    <description>Khu luyện tập microservices: chuyển tiền giữa các tài khoản nội bộ</description>
+
+    <!-- Các module con của khu. Thêm module mới ở các bước sau (gateway, discovery...) vào đây. -->
+    <modules>
+        <module>account-service-api</module>
+        <module>account-service</module>
+        <module>transfer-service</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--
+          Spring Cloud release train khớp Spring Boot 3.5.x.
+          BƯỚC 0 CHƯA dùng Spring Cloud, nhưng import sẵn BOM ở đây để các bước sau
+          (discovery/gateway/config/resilience) chỉ việc thêm 'starter', không phải
+          sửa lại parent nhiều lần. Import BOM không kéo thêm dependency nào — nó chỉ
+          quản version cho artifact nào ta thực sự khai sau này.
+        -->
+        <spring-cloud.version>2025.0.3</spring-cloud.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- BOM của Spring Cloud: quản version mọi starter cloud dùng ở các bước sau. -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Module contract nội bộ (cách A: chia sẻ DTO qua một jar chung). -->
+            <dependency>
+                <groupId>com.hdl.mt</groupId>
+                <artifactId>account-service-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

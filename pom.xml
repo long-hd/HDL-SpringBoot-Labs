@@ -28,6 +28,8 @@
         <module>labx-04-spring-cloud-alibaba-sentinel</module>
         <module>labx-05-spring-cloud-nacos-config</module>
         <module>labx-08-spring-cloud-gateway</module>
+
+        <module>system-money-transfer</module>
     </modules>
 
 </project>

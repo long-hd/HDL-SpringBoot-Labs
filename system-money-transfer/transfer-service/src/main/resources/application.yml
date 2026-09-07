@@ -1,0 +1,24 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: transfer-service
+
+  datasource:
+    # DB riêng của transfer-service.
+    url: jdbc:postgresql://localhost:5432/transfer_db
+    username: postgres
+    password: 123456789
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+# Địa chỉ account-service — BƯỚC 0 để CỨNG ở đây.
+# Bước 3 (service discovery) sẽ bỏ URL này và gọi theo TÊN service.
+account-service:
+  base-url: http://localhost:8081

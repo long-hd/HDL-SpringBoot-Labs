@@ -1,0 +1,28 @@
+# Hạ tầng cho bước 0: một Postgres, hai database tách biệt (account_db, transfer_db).
+#
+# Vì sao hai database cho hai service (database-per-service): mỗi service sở hữu dữ liệu
+# của riêng nó, không service nào được đọc/ghi thẳng vào DB của service khác. Ở đây ta
+# dùng CHUNG một instance Postgres cho gọn khi học, nhưng ranh giới sở hữu vẫn phải giữ:
+# transfer-service muốn biết số dư thì gọi API account-service, KHÔNG truy vấn account_db.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: mt-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      # Script này chạy MỘT LẦN khi volume dữ liệu còn trống, để tạo sẵn hai database.
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+      - mt-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  mt-postgres-data:

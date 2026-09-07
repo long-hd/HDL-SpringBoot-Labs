@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hdl.mt</groupId>
+        <artifactId>system-money-transfer-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>transfer-service</artifactId>
+    <name>transfer-service</name>
+    <description>Điều phối một lần chuyển tiền: trừ tài khoản nguồn, cộng tài khoản đích. DB riêng (transfer_db).</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!--
+          Cách A: transfer-service add ĐÚNG jar contract của account-service để dùng lại
+          DebitRequest/CreditRequest/AccountResponse — không tự khai lại DTO. Nếu contract
+          đổi, module này sẽ báo lỗi COMPILE ngay khi build.
+        -->
+        <dependency>
+            <groupId>com.hdl.mt</groupId>
+            <artifactId>account-service-api</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
