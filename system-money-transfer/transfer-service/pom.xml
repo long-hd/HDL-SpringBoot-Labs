@@ -51,6 +51,19 @@
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
         <!--
+          BƯỚC 6: lấy config nghiệp vụ từ Config Server + cho phép refresh nóng.
+          - spring-cloud-starter-config: client của Config Server (dùng spring.config.import).
+          - actuator: cung cấp endpoint POST /actuator/refresh để nạp lại config lúc chạy.
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!--
           Cách A: transfer-service add ĐÚNG jar contract của account-service để dùng lại
           DebitRequest/CreditRequest/AccountResponse — không tự khai lại DTO. Nếu contract
           đổi, module này sẽ báo lỗi COMPILE ngay khi build.

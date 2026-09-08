@@ -5,6 +5,13 @@ spring:
   application:
     name: transfer-service
 
+  # BƯỚC 6: lấy config nghiệp vụ từ Config Server. 'optional:' để service vẫn khởi động được
+  # nếu Config Server chưa chạy (không chết cứng). Đây là cơ chế Spring Boot 2.4+, thay cho
+  # bootstrap.yml cũ. Địa chỉ Config Server nằm ở ĐÂY (bootstrap config) — không thể đưa vào
+  # chính Config Server (vòng luẩn quẩn).
+  config:
+    import: optional:configserver:http://localhost:8888
+
   datasource:
     # DB riêng của transfer-service.
     url: jdbc:postgresql://localhost:5432/transfer_db
@@ -17,6 +24,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+# Cho phép gọi POST /actuator/refresh để nạp lại config từ Config Server lúc chạy.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
 
 # BƯỚC 3: không còn URL cứng. transfer-service gọi account-service theo TÊN qua Eureka.
 account-service:

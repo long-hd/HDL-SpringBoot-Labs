@@ -2,6 +2,7 @@ package com.hdl.mt.transfer.service;
 
 import com.hdl.mt.transfer.client.AccountClientException;
 import com.hdl.mt.transfer.client.AccountPort;
+import com.hdl.mt.transfer.config.TransferProperties;
 import com.hdl.mt.transfer.domain.Transfer;
 import com.hdl.mt.transfer.repository.TransferRepository;
 import org.slf4j.Logger;
@@ -33,10 +34,14 @@ public class TransferService {
 
     private final TransferRepository transferRepository;
     private final AccountPort accountPort;
+    private final TransferProperties properties;
 
-    public TransferService(TransferRepository transferRepository, AccountPort accountPort) {
+    public TransferService(TransferRepository transferRepository,
+                           AccountPort accountPort,
+                           TransferProperties properties) {
         this.transferRepository = transferRepository;
         this.accountPort = accountPort;
+        this.properties = properties;
     }
 
     /**
@@ -47,6 +52,14 @@ public class TransferService {
     public Transfer transfer(Long fromAccountId, Long toAccountId, BigDecimal amount) {
         if (fromAccountId.equals(toAccountId)) {
             throw new IllegalArgumentException("Tài khoản nguồn và đích không được trùng nhau");
+        }
+
+        // BƯỚC 6: luật nghiệp vụ — chặn khoản vượt hạn mức mỗi lần chuyển. Hạn mức lấy từ
+        // Config Server (đổi nóng được qua /actuator/refresh). Chặn NGAY, trước khi động vào tiền.
+        BigDecimal maxAmount = properties.getMaxAmountPerTransaction();
+        if (maxAmount != null && amount.compareTo(maxAmount) > 0) {
+            throw new IllegalArgumentException(
+                    "Số tiền " + amount + " vượt hạn mức mỗi lần chuyển (" + maxAmount + ")");
         }
 
         // Ghi lại Ý ĐỊNH trước (PENDING) để luôn có dấu vết dù sau đó có sự cố.

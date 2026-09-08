@@ -1,0 +1,14 @@
+# Config NGHIỆP VỤ của transfer-service, quản tập trung ở Config Server (backend native).
+# Đây là file mà Config Server phát cho service có spring.application.name=transfer-service.
+#
+# Sửa giá trị dưới đây rồi gọi POST http://localhost:8082/actuator/refresh -> transfer-service
+# nhận giá trị mới mà KHÔNG cần rebuild/restart. Đó là điểm của Config Server.
+#
+# Lưu ý: chỉ để config ĐỔI ĐƯỢC LÚC CHẠY ở đây. Config bootstrap (tên app, port, địa chỉ
+# eureka/config-server, datasource) vẫn nằm ở application.yml local của transfer-service.
+
+transfer:
+  # Hạn mức số tiền tối đa cho MỘT lần chuyển. Vượt quá -> transfer-service từ chối (HTTP 400)
+  # ngay từ đầu, trước khi gọi account-service. Đây là một quy tắc nghiệp vụ (kiểm soát rủi ro),
+  # khác với rate-limit ở gateway (giới hạn số lượng request).
+  max-amount-per-transaction: 150000000

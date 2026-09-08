@@ -13,7 +13,7 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 | 3 | Service discovery — gọi theo tên, bỏ URL cứng (cả Feign lẫn HTTP Interface) | discovery-server (Eureka) + LoadBalancer | ✅ Xong |
 | 4 | Load balancing giữa nhiều instance | Spring Cloud LoadBalancer | ✅ Không code mới — LB đã cấu hình ở bước 3; xác nhận bằng chạy 2 instance account-service |
 | 5 | API Gateway — một cửa vào + demo rate limit | api-gateway (Gateway WebFlux) + Redis | ✅ Xong |
-| 6 | Config tập trung | Config Server | ⬜ Chưa |
+| 6 | Config tập trung + refresh nóng (hạn mức chuyển tiền) | config-server (native) | ✅ Xong |
 | 7 | Resilience — circuit breaker/retry/timeout | Resilience4j | ⬜ Chưa |
 | 8 | **Saga + outbox + idempotency** (vá lỗ hổng bước 0) | transfer-service (orchestrator) | ⬜ Chưa |
 | 9 | Async event | Kafka | ⬜ Chưa |
@@ -33,7 +33,23 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
   muốn nếm bài học decoupling ở một cặp service khác.)
 - **Async (bước 9) = Kafka**.
 - **DB = PostgreSQL, database-per-service** (một instance chung khi học, nhưng không join chéo).
-- **Config (bước 6)**: bắt đầu `native` (đọc file local) cho gọn, chuyển `git` sau.
+- **Config (bước 6) = Config Server backend `native`** (đã chốt): bắt đầu đọc file local cho
+  gọn, chuyển `git` sau (chỉ đổi backend, không đụng code). Ví dụ đưa ra config: **hạn mức
+  chuyển tiền** của transfer-service (property nghiệp vụ thuần, demo refresh nóng sạch hơn cấu
+  hình route của gateway). Client nối Config Server bằng `spring.config.import=optional:configserver`
+  (cơ chế Boot 2.4+, KHÔNG dùng bootstrap.yml cũ). `@ConfigurationProperties` tự rebind khi
+  `/actuator/refresh` (không cần `@RefreshScope`).
+
+## Known gaps (đã nhận diện, xử lý ở bước sau)
+
+- [từ bước 5] **Gateway bị bypass nếu gọi thẳng port service** (8081/8082 vẫn mở). Rate-limit
+  và auth ở gateway chỉ có tác dụng nếu service KHÔNG lộ trực tiếp. Cách đúng: chặn ở tầng
+  mạng/deploy (K8s `ClusterIP` cho service, chỉ gateway expose; hoặc Docker compose không
+  publish port service) — KHÔNG phải soi header ở mỗi service. Xử lý ở **bước 12 (K8s)**.
+- [từ bước 5] **Route khai tường minh, mỗi service một khối** — nhiều service sẽ dài. Lựa chọn:
+  bật Discovery Locator (`spring.cloud.gateway.server.webflux.discovery.locator.enabled=true`)
+  để gateway tự sinh route từ Eureka; đánh đổi là mất tinh chỉnh filter/rate-limit per-route.
+  Đa số dự án vẫn nghiêng khai tường minh vì cần kiểm soát per-route. Giữ tường minh hiện tại.
 - **Discovery (bước 3) = Eureka** (đã chốt): mục tiêu hiểu cơ chế discovery; Eureka thuần
   Spring, dựng nhanh, không phải vận hành hạ tầng lạ. Consul có thể làm sau như lab đối chiếu.
 - **Gateway (bước 5) = Spring Cloud Gateway WebFlux + rate limit** (đã chốt): route theo tên

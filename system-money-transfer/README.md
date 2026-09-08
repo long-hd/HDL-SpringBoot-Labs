@@ -13,7 +13,7 @@ khu này chuyển tiền nội bộ giữa account) nên không lẫn.
 > ⚠️ Đây là project **luyện tập**. Javadoc viết bằng **tiếng Việt** cho dễ học. Không phải
 > code production.
 
-## Trạng thái hiện tại: đã xong bước 5 (Gateway + rate limit)
+## Trạng thái hiện tại: đã xong bước 6 (Config Server + refresh nóng)
 
 Xem lộ trình đầy đủ 13 bước và tiến độ ở [`docs/build-plan.md`](docs/build-plan.md).
 
@@ -50,6 +50,7 @@ rate limit. Các bước sau bồi tiếp: config, resilience, saga, kafka, trac
 | Module | Cổng | DB | Vai trò |
 |---|---|---|---|
 | `discovery-server` | 8761 | — | Eureka — danh bạ đăng ký/tra cứu service |
+| `config-server` | 8888 | — | Phát config nghiệp vụ tập trung (native backend) |
 | `api-gateway` | 8080 | — | Cửa vào duy nhất: route + rate limit |
 | `account-service-api` | — | — | Jar contract chung (DTO + AccountApi) |
 | `account-service` | 8081 | account_db | Giữ số dư, xử lý trừ/cộng tiền |
@@ -71,6 +72,7 @@ mvn -pl account-service-api install
 
 # 3) Chạy theo thứ tự, mỗi cái một terminal
 mvn -pl discovery-server spring-boot:run   # Eureka  :8761
+mvn -pl config-server    spring-boot:run   # Config  :8888
 mvn -pl account-service  spring-boot:run   # :8081
 mvn -pl transfer-service spring-boot:run   # :8082
 mvn -pl api-gateway      spring-boot:run   # :8080  (cửa vào)

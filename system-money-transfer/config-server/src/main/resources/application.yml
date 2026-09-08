@@ -1,0 +1,24 @@
+server:
+  port: 8888   # cổng chuẩn của Config Server
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    # Bật backend "native" = đọc config từ filesystem local (không dùng Git). Chuyển sang git
+    # sau này chỉ là đổi cấu hình backend, không đụng code.
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          # Nơi chứa file config nghiệp vụ. Liệt kê HAI đường dẫn để chắc chắn tìm được bất
+          # kể chạy `mvn -pl config-server spring-boot:run` từ thư mục gốc dự án HAY từ trong
+          # thư mục config-server (working directory của spring-boot:run có thể là một trong
+          # hai). Đường nào không tồn tại sẽ được bỏ qua.
+          #   - file:./config-repo                -> khi working dir = thư mục config-server
+          #   - file:./config-server/config-repo  -> khi working dir = thư mục gốc dự án
+          search-locations:
+            - file:./config-repo
+            - file:./config-server/config-repo
+            - file:/home/long/Workspace/spring/HDL-SpringBoot-Labs/system-money-transfer/config-server/config-repo
