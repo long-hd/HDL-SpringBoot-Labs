@@ -1,34 +1,36 @@
 package com.hdl.mt.transfer.client;
 
+import com.hdl.mt.account.api.AccountApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 /**
- * Tạo một {@link RestClient} đã gắn sẵn địa chỉ gốc của account-service.
+ * Tạo proxy {@link AccountApi} cho phía HTTP Interface.
  *
- * <p>{@link RestClient} là HTTP client đồng bộ (blocking) hiện đại của Spring 6, thay cho
- * {@code RestTemplate} cũ. Bước 0 dùng nó với URL CỨNG (đọc từ property
- * {@code account-service.base-url}).</p>
+ * <p>Luồng: dựng một {@link RestClient} gắn địa chỉ gốc account-service (BƯỚC 2 vẫn dùng
+ * URL CỨNG, bước 3 sẽ thay bằng gọi theo tên qua discovery) -> bọc bằng
+ * {@code RestClientAdapter} -> {@code HttpServiceProxyFactory} sinh ra một hiện thực của
+ * interface {@link AccountApi}. Từ đó gọi {@code api.debit(...)} như gọi method thường,
+ * Spring tự dịch thành lời gọi HTTP.</p>
  *
- * <p><b>Đây chính là điểm yếu mà các bước sau sẽ vá:</b> địa chỉ đang bị đóng cứng
- * ({@code http://localhost:8081}). Trong thực tế, account-service có thể có nhiều bản
- * (instance) với IP đổi liên tục. Vì vậy:
- * <ul>
- *   <li>Bước 2 sẽ thay lời gọi thủ công bằng một interface khai báo (HTTP Interface/OpenFeign).</li>
- *   <li>Bước 3 sẽ thay URL cứng bằng gọi theo TÊN service qua service discovery.</li>
- *   <li>Bước 4 sẽ chia tải giữa nhiều instance.</li>
- * </ul>
- * Giữ URL cứng ở bước 0 là cố ý — để thấy rõ vấn đề trước khi thấy lời giải.</p>
+ * <p>So với bước 0 (tự viết {@code restClient.post().uri(...).body(...).retrieve()}), cách
+ * này khai báo (declarative): interface mô tả "gọi gì", không lặp code HTTP ở mỗi lời gọi.</p>
  */
 @Configuration
 public class AccountClientConfig {
 
     @Bean
-    public RestClient accountRestClient(@Value("${account-service.base-url}") String baseUrl) {
-        return RestClient.builder()
+    public AccountApi accountApi(@Value("${account-service.base-url}") String baseUrl) {
+        RestClient restClient = RestClient.builder()
                 .baseUrl(baseUrl)
                 .build();
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory
+                .builderFor(RestClientAdapter.create(restClient))
+                .build();
+        return factory.createClient(AccountApi.class);
     }
 }

@@ -18,11 +18,17 @@
       dependency để dùng lại -> đổi contract thì đôi bên báo lỗi COMPILE ngay, không
       phải chờ tới runtime mới lộ mismatch.
 
-      BƯỚC 0: module này CỐ Ý giữ mỏng, chỉ có DTO thuần (Java record), không kéo
-      Spring/JPA. Tới BƯỚC 2 (nối client) ta mới thêm interface @HttpExchange vào đây
-      + dependency spring-web, để cùng một interface dùng được cả server lẫn client.
+      BƯỚC 0: chỉ có DTO thuần (record). BƯỚC 2: thêm interface AccountApi (@HttpExchange)
+      -> cần đúng MỘT dependency nhẹ là spring-web (chứa các annotation @HttpExchange,
+      @PathVariable, @RequestBody). KHÔNG kéo cả spring-boot-starter-web để module giữ mỏng.
+      Version của spring-web do spring-boot-starter-parent (qua parent) quản, không khai ở đây.
     -->
 
-    <!-- Không có dependency nào ở bước 0: chỉ toàn record thuần. -->
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

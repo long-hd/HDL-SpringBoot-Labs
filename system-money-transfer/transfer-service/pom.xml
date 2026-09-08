@@ -29,6 +29,15 @@
             <scope>runtime</scope>
         </dependency>
         <!--
+          BƯỚC 2: OpenFeign để so sánh với HTTP Interface. Version do spring-cloud BOM
+          (2025.0.3, khai ở parent) quản -> không cần ghi version ở đây. HTTP Interface thì
+          KHÔNG cần dependency riêng (nằm sẵn trong spring-web của starter-web).
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <!--
           Cách A: transfer-service add ĐÚNG jar contract của account-service để dùng lại
           DebitRequest/CreditRequest/AccountResponse — không tự khai lại DTO. Nếu contract
           đổi, module này sẽ báo lỗi COMPILE ngay khi build.

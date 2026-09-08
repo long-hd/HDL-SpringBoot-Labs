@@ -22,3 +22,9 @@ spring:
 # Bước 3 (service discovery) sẽ bỏ URL này và gọi theo TÊN service.
 account-service:
   base-url: http://localhost:8081
+  # BƯỚC 2: chọn cơ chế client để gọi account-service.
+  #   http-interface = dùng Spring HTTP Interface (@HttpExchange) — MẶC ĐỊNH (bỏ trống cũng ra cái này)
+  #   feign          = dùng OpenFeign
+  # Đổi giá trị này rồi khởi động lại transfer-service để so sánh hai cách; TransferService
+  # KHÔNG đổi dòng code nào — đó là điểm của cổng AccountPort.
+  client: feign

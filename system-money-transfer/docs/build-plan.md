@@ -9,7 +9,7 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 |---|---|---|---|
 | 0 | Khung tối giản: account + transfer, gọi nhau bằng REST + URL cứng, happy-path | account-service, transfer-service, account-service-api | ✅ Xong |
 | 1 | Nền distributed systems (why) | (lý thuyết) | ✅ Ghi note (`m1-distributed-systems-notes.md`) |
-| 2 | Thay lời gọi thủ công bằng interface khai báo | HTTP Interface / OpenFeign | ⬜ Chưa |
+| 2 | Thay lời gọi thủ công bằng interface khai báo (cả HTTP Interface lẫn OpenFeign, swap qua config) | HTTP Interface + OpenFeign, cổng AccountPort | ✅ Xong |
 | 3 | Service discovery — gọi theo tên, bỏ URL cứng | discovery-server (Eureka/Consul) | ⬜ Chưa |
 | 4 | Load balancing giữa nhiều instance | Spring Cloud LoadBalancer | ⬜ Chưa |
 | 5 | API Gateway — một cửa vào | Spring Cloud Gateway | ⬜ Chưa |
@@ -36,10 +36,17 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 - **Config (bước 6)**: bắt đầu `native` (đọc file local) cho gọn, chuyển `git` sau.
 - **Version**: gom về BOM tập trung ở parent pom (khác các lab rời khai ở leaf), vì các
   service ở đây chạy cùng và phải tương thích.
-- **Client (bước 2)**: CHƯA chốt OpenFeign vs Spring HTTP Interface. Lưu ý đã ghi nhận:
-  Spring Cloud OpenFeign được coi feature-complete từ Cloud 2022.0.0, Spring khuyến nghị
-  HTTP Interface cho dự án mới (OpenFeign vẫn dùng được, chỉ không phải hướng khuyến nghị).
-  Sẽ quyết ở đầu bước 2 — có thể làm cả hai để so sánh + cả hai lên CV.
+- **Client (bước 2) = CẢ HAI** (đã chốt): HTTP Interface (mặc định) và OpenFeign, chọn qua
+  property `account-service.client`, cùng chui qua cổng `AccountPort` nên `TransferService`
+  không đổi khi swap. OpenFeign feature-complete từ Cloud 2022.0.0; Spring khuyến nghị HTTP
+  Interface cho dự án mới, nhưng OpenFeign vẫn phổ biến trong JD -> biết cả hai.
+- **Ràng buộc version cần nhớ (có dẫn chứng)**:
+  - Boot 3.5 = Spring Framework 6.2 (bản 3.x cuối). Boot 4.0 = Spring Framework 7.0.
+  - Server-side `@HttpExchange` (controller implement chính interface) là điểm nhấn của
+    SF7/Boot4 -> bước 2 chỉ dùng `@HttpExchange` phía CLIENT, account-service giữ `@PostMapping`.
+  - HTTP Interface tích hợp mượt load-balancing/discovery từ Spring Cloud 2025.1 (Boot 4);
+    ở Cloud 2025.0 (Boot 3.5) hiện tại, bước 3–4 nối HTTP Interface với discovery sẽ phải
+    config tay hơn OpenFeign (Feign tích hợp discovery/LB sẵn). Cân nhắc ở bước 3.
 - **Javadoc = tiếng Việt** (project luyện tập).
 
 ## Quy ước làm việc (theo AGENTS.md của repo)
