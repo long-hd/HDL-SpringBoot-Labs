@@ -1,0 +1,56 @@
+server:
+  port: 8080   # cửa vào duy nhất; client gọi http://localhost:8080/...
+
+spring:
+  application:
+    name: api-gateway
+
+  # Redis cho RedisRateLimiter (token bucket). Vì sao cần Redis: khi chạy NHIỀU instance
+  # gateway, tất cả phải đếm chung một bucket cho mỗi client -> cần một store dùng chung.
+  # In-memory sẽ khiến mỗi instance đếm riêng, hạn mức thật bị nhân lên theo số instance.
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cloud:
+    gateway:
+      # LƯU Ý: từ Spring Cloud 2025.0, prefix cấu hình đổi thành
+      # 'spring.cloud.gateway.server.webflux.*' (prefix cũ 'spring.cloud.gateway.*' vẫn chạy
+      # nhưng in warning). Dùng prefix mới.
+      server:
+        webflux:
+          # Khai route TƯỜNG MINH (không bật discovery locator tự động) để dễ đọc/kiểm soát.
+          discovery:
+            locator:
+              enabled: false
+          routes:
+            - id: account-service
+              uri: lb://account-service      # lb:// = định tuyến theo tên qua Eureka + LoadBalancer
+              predicates:
+                - Path=/accounts/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@ipKeyResolver}"
+                    # Token bucket: nạp 2 token/giây, chứa tối đa 4 -> quá 4 request/giây/IP => 429.
+                    # Đặt thấp cho DỄ THẤY khi demo; thực tế chỉnh theo nhu cầu.
+                    redis-rate-limiter.replenishRate: 2
+                    redis-rate-limiter.burstCapacity: 4
+                    redis-rate-limiter.requestedTokens: 1
+            - id: transfer-service
+              uri: lb://transfer-service
+              predicates:
+                - Path=/transfers/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@ipKeyResolver}"
+                    redis-rate-limiter.replenishRate: 2
+                    redis-rate-limiter.burstCapacity: 4
+                    redis-rate-limiter.requestedTokens: 1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

@@ -24,5 +24,17 @@ services:
       timeout: 3s
       retries: 5
 
+  # BƯỚC 5: Redis cho RedisRateLimiter của api-gateway (token bucket dùng chung).
+  redis:
+    image: redis:7
+    container_name: mt-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   mt-postgres-data:

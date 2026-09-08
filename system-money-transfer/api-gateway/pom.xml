@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hdl.mt</groupId>
+        <artifactId>system-money-transfer-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>api-gateway</artifactId>
+    <name>api-gateway</name>
+    <description>Một cửa vào duy nhất: định tuyến tới các service + rate limit (demo cross-cutting).</description>
+
+    <dependencies>
+        <!--
+          Spring Cloud Gateway (bản WebFlux/reactive). LƯU Ý TÊN ARTIFACT: từ Spring Cloud
+          2025.0, tên cũ 'spring-cloud-starter-gateway' đã ĐỔI thành
+          'spring-cloud-starter-gateway-server-webflux' (tên cũ vẫn chạy nhưng in warning).
+          Gateway chạy trên WebFlux + Netty (reactive) -> KHÔNG thêm spring-boot-starter-web
+          (servlet) vào module này, sẽ xung đột web stack.
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
+        </dependency>
+        <!-- Để route theo tên service (lb://account-service...) qua Eureka + LoadBalancer. -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+        <!--
+          Rate limit dùng RedisRateLimiter (thuật toán token bucket). Bắt buộc dùng bản
+          REACTIVE của Redis starter vì Gateway là reactive.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

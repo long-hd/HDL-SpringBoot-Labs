@@ -13,80 +13,86 @@ khu này chuyển tiền nội bộ giữa account) nên không lẫn.
 > ⚠️ Đây là project **luyện tập**. Javadoc viết bằng **tiếng Việt** cho dễ học. Không phải
 > code production.
 
-## Trạng thái hiện tại: Bước 0 (khung tối giản, chưa có Spring Cloud)
+## Trạng thái hiện tại: đã xong bước 5 (Gateway + rate limit)
 
 Xem lộ trình đầy đủ 13 bước và tiến độ ở [`docs/build-plan.md`](docs/build-plan.md).
 
-## Kiến trúc (từ bước 3)
+## Kiến trúc (từ bước 5)
 
 ```
    client
-     │  POST /transfers {fromAccountId, toAccountId, amount}
+     │  http://localhost:8080/transfers , /accounts/...
      ▼
-┌──────────────────┐   gọi theo TÊN "account-service" (load-balanced qua Eureka)
-│ transfer-service │ ──────────────────────────────────────────────┐
-│      :8082       │   HTTP Interface HOẶC OpenFeign                 │
-│   transfer_db    │   (chọn qua account-service.client)             ▼
-└────────┬─────────┘                                     ┌──────────────────┐
-         │ đăng ký / tra cứu                             │  account-service │
-         ▼                                               │  :8081  (n bản)  │
-┌──────────────────┐   ◄── đăng ký ─────────────────────│    account_db    │
-│ discovery-server │                                     └──────────────────┘
-│  Eureka  :8761   │
+┌──────────────────┐  api-gateway :8080  ── route lb:// + rate limit (RedisRateLimiter)
+│    api-gateway    │──────────────┬───────────────────────────┐
+└────────┬─────────┘              │                            │
+         │ tra Eureka             ▼ /transfers/**              ▼ /accounts/**
+         │              ┌──────────────────┐        ┌──────────────────┐
+         │              │ transfer-service │ ─────► │  account-service │
+         │              │      :8082       │ lb://  │  :8081  (n bản)  │
+         │              │   transfer_db    │        │    account_db    │
+         │              └──────────────────┘        └──────────────────┘
+         ▼
+┌──────────────────┐        ┌──────────────┐
+│ discovery-server │        │ redis :6379  │  (token bucket cho rate limit)
+│  Eureka  :8761   │        └──────────────┘
 └──────────────────┘
 
-  account-service-api (jar contract chung: DTO + interface AccountApi @HttpExchange, dùng phía client)
+  transfer→account: HTTP Interface hoặc OpenFeign (chọn qua account-service.client)
+  account-service-api: jar contract chung (DTO + AccountApi @HttpExchange, phía client)
 ```
 
-Từ bước 3: không còn URL cứng — transfer-service tra Eureka để biết account-service ở đâu.
-Các bước sau bồi tiếp: gateway, config, resilience, saga, kafka, tracing, security, k8s.
+Từ bước 5: client đi qua **một cửa** (gateway :8080). Gateway route theo tên service và áp
+rate limit. Các bước sau bồi tiếp: config, resilience, saga, kafka, tracing, security, k8s.
 
 ## Module
 
 | Module | Cổng | DB | Vai trò |
 |---|---|---|---|
-| `account-service-api` | — | — | Jar contract chung (DTO). Bước 2 thêm interface HTTP. |
+| `discovery-server` | 8761 | — | Eureka — danh bạ đăng ký/tra cứu service |
+| `api-gateway` | 8080 | — | Cửa vào duy nhất: route + rate limit |
+| `account-service-api` | — | — | Jar contract chung (DTO + AccountApi) |
 | `account-service` | 8081 | account_db | Giữ số dư, xử lý trừ/cộng tiền |
 | `transfer-service` | 8082 | transfer_db | Điều phối một lần chuyển tiền |
 
-## Cách chạy (từ bước 3 — có Eureka)
+## Cách chạy (từ bước 5)
 
 Cần: JDK 21, Maven, Docker.
 
 ```bash
-# 1) Bật Postgres (tạo sẵn account_db + transfer_db)
+# 1) Bật hạ tầng: Postgres (account_db + transfer_db) + Redis (rate limit)
 cd infra
 docker compose up -d
 
 # 2) Cài parent + api vào local maven (một lần)
 cd ..
-mvn -N install                       # cài parent pom
-mvn -pl account-service-api install  # build + install jar contract
+mvn -N install
+mvn -pl account-service-api install
 
-# 3) Chạy Eureka TRƯỚC (các service cần nó để đăng ký), rồi hai service — mỗi cái một terminal
-mvn -pl discovery-server spring-boot:run   # http://localhost:8761 (mở xem dashboard Eureka)
-mvn -pl account-service spring-boot:run
-mvn -pl transfer-service spring-boot:run
+# 3) Chạy theo thứ tự, mỗi cái một terminal
+mvn -pl discovery-server spring-boot:run   # Eureka  :8761
+mvn -pl account-service  spring-boot:run   # :8081
+mvn -pl transfer-service spring-boot:run   # :8082
+mvn -pl api-gateway      spring-boot:run   # :8080  (cửa vào)
 ```
 
-Mở http://localhost:8761 sẽ thấy `ACCOUNT-SERVICE` và `TRANSFER-SERVICE` đã đăng ký.
+Mở http://localhost:8761 xem các service đã đăng ký.
 Đổi client HTTP Interface ↔ Feign: sửa `account-service.client` trong `transfer-service/application.yml`.
 
-## Thử nhanh
+## Thử nhanh (qua gateway :8080)
 
 ```bash
-# Xem số dư (đã seed sẵn: id 1 = 1.000.000, id 2 = 500.000, id 3 = 0)
-curl http://localhost:8081/accounts/1
+# Xem số dư (đã seed: id 1 = 1.000.000, id 2 = 500.000, id 3 = 0)
+curl http://localhost:8080/accounts/1
 
-# Chuyển 200.000 từ tài khoản 1 sang 2 -> kỳ vọng status COMPLETED
-curl -X POST http://localhost:8082/transfers \
+# Chuyển 200.000 từ 1 sang 2 QUA GATEWAY -> kỳ vọng status COMPLETED
+curl -X POST http://localhost:8080/transfers \
   -H "Content-Type: application/json" \
   -d '{"fromAccountId":1,"toAccountId":2,"amount":200000}'
 
-# Chuyển vượt số dư -> account-service trả 409, transfer status FAILED (chưa mất tiền)
-curl -X POST http://localhost:8082/transfers \
-  -H "Content-Type: application/json" \
-  -d '{"fromAccountId":3,"toAccountId":1,"amount":999999}'
+# Demo rate limit: bắn dồn > 4 request/giây -> vài cái đầu 200, sau đó HTTP 429
+for i in $(seq 1 12); do curl -s -o /dev/null -w "%{http_code}
+" http://localhost:8080/accounts/1; done
 ```
 
 ## Lỗ hổng cố ý của bước 0 (bài học)

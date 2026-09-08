@@ -11,8 +11,8 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 | 1 | Nền distributed systems (why) | (lý thuyết) | ✅ Ghi note (`m1-distributed-systems-notes.md`) |
 | 2 | Thay lời gọi thủ công bằng interface khai báo (cả HTTP Interface lẫn OpenFeign, swap qua config) | HTTP Interface + OpenFeign, cổng AccountPort | ✅ Xong |
 | 3 | Service discovery — gọi theo tên, bỏ URL cứng (cả Feign lẫn HTTP Interface) | discovery-server (Eureka) + LoadBalancer | ✅ Xong |
-| 4 | Load balancing giữa nhiều instance | Spring Cloud LoadBalancer | ⬜ Chưa |
-| 5 | API Gateway — một cửa vào | Spring Cloud Gateway | ⬜ Chưa |
+| 4 | Load balancing giữa nhiều instance | Spring Cloud LoadBalancer | ✅ Không code mới — LB đã cấu hình ở bước 3; xác nhận bằng chạy 2 instance account-service |
+| 5 | API Gateway — một cửa vào + demo rate limit | api-gateway (Gateway WebFlux) + Redis | ✅ Xong |
 | 6 | Config tập trung | Config Server | ⬜ Chưa |
 | 7 | Resilience — circuit breaker/retry/timeout | Resilience4j | ⬜ Chưa |
 | 8 | **Saga + outbox + idempotency** (vá lỗ hổng bước 0) | transfer-service (orchestrator) | ⬜ Chưa |
@@ -36,6 +36,10 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 - **Config (bước 6)**: bắt đầu `native` (đọc file local) cho gọn, chuyển `git` sau.
 - **Discovery (bước 3) = Eureka** (đã chốt): mục tiêu hiểu cơ chế discovery; Eureka thuần
   Spring, dựng nhanh, không phải vận hành hạ tầng lạ. Consul có thể làm sau như lab đối chiếu.
+- **Gateway (bước 5) = Spring Cloud Gateway WebFlux + rate limit** (đã chốt): route theo tên
+  (lb://) + demo RequestRateLimiter (RedisRateLimiter, token bucket) để thấy giá trị đặt
+  cross-cutting concern ở gateway. Artifact tên mới `spring-cloud-starter-gateway-server-webflux`
+  (2025.0), prefix `spring.cloud.gateway.server.webflux.*`. Rate limit cần Redis (shared store).
 - **Version**: gom về BOM tập trung ở parent pom (khác các lab rời khai ở leaf), vì các
   service ở đây chạy cùng và phải tương thích.
 - **Client (bước 2) = CẢ HAI** (đã chốt): HTTP Interface (mặc định) và OpenFeign, chọn qua
