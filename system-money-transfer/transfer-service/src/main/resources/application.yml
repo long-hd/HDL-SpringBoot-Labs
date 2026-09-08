@@ -18,13 +18,16 @@ spring:
       hibernate:
         format_sql: true
 
-# Địa chỉ account-service — BƯỚC 0 để CỨNG ở đây.
-# Bước 3 (service discovery) sẽ bỏ URL này và gọi theo TÊN service.
+# BƯỚC 3: không còn URL cứng. transfer-service gọi account-service theo TÊN qua Eureka.
 account-service:
-  base-url: http://localhost:8081
-  # BƯỚC 2: chọn cơ chế client để gọi account-service.
-  #   http-interface = dùng Spring HTTP Interface (@HttpExchange) — MẶC ĐỊNH (bỏ trống cũng ra cái này)
-  #   feign          = dùng OpenFeign
-  # Đổi giá trị này rồi khởi động lại transfer-service để so sánh hai cách; TransferService
-  # KHÔNG đổi dòng code nào — đó là điểm của cổng AccountPort.
-  client: feign
+  # Chọn cơ chế client (giữ nguyên từ bước 2):
+  #   http-interface = Spring HTTP Interface (@HttpExchange) — MẶC ĐỊNH
+  #   feign          = OpenFeign
+  # Cả hai giờ đều gọi theo tên "account-service" và load-balance; TransferService không đổi.
+  client: http-interface
+
+# Đăng ký transfer-service vào Eureka + để tra cứu account-service.
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

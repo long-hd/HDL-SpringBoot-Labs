@@ -17,28 +17,29 @@ khu này chuyển tiền nội bộ giữa account) nên không lẫn.
 
 Xem lộ trình đầy đủ 13 bước và tiến độ ở [`docs/build-plan.md`](docs/build-plan.md).
 
-## Kiến trúc (bước 0)
+## Kiến trúc (từ bước 3)
 
 ```
    client
      │  POST /transfers {fromAccountId, toAccountId, amount}
      ▼
-┌──────────────────┐     RestClient (URL cứng http://localhost:8081)
-│ transfer-service │ ─────────────────────────────────────────────►┐
-│      :8082       │   POST /accounts/{id}/debit                    │
-│   transfer_db    │   POST /accounts/{id}/credit                   ▼
-└──────────────────┘                                    ┌──────────────────┐
-                                                         │  account-service │
-                                                         │      :8081       │
-                                                         │    account_db    │
-                                                         └──────────────────┘
+┌──────────────────┐   gọi theo TÊN "account-service" (load-balanced qua Eureka)
+│ transfer-service │ ──────────────────────────────────────────────┐
+│      :8082       │   HTTP Interface HOẶC OpenFeign                 │
+│   transfer_db    │   (chọn qua account-service.client)             ▼
+└────────┬─────────┘                                     ┌──────────────────┐
+         │ đăng ký / tra cứu                             │  account-service │
+         ▼                                               │  :8081  (n bản)  │
+┌──────────────────┐   ◄── đăng ký ─────────────────────│    account_db    │
+│ discovery-server │                                     └──────────────────┘
+│  Eureka  :8761   │
+└──────────────────┘
 
-  account-service-api (jar contract chung: DebitRequest/CreditRequest/AccountResponse)
-  ↑ account-service implement, transfer-service dùng lại  (đây là "cách A" chia sẻ contract)
+  account-service-api (jar contract chung: DTO + interface AccountApi @HttpExchange, dùng phía client)
 ```
 
-Ở bước 0: gọi nhau bằng **URL cứng**, chưa discovery/gateway/config/resilience/saga.
-Các bước sau sẽ bồi từng mảnh vào chính khung này.
+Từ bước 3: không còn URL cứng — transfer-service tra Eureka để biết account-service ở đâu.
+Các bước sau bồi tiếp: gateway, config, resilience, saga, kafka, tracing, security, k8s.
 
 ## Module
 
@@ -48,7 +49,7 @@ Các bước sau sẽ bồi từng mảnh vào chính khung này.
 | `account-service` | 8081 | account_db | Giữ số dư, xử lý trừ/cộng tiền |
 | `transfer-service` | 8082 | transfer_db | Điều phối một lần chuyển tiền |
 
-## Cách chạy (bước 0)
+## Cách chạy (từ bước 3 — có Eureka)
 
 Cần: JDK 21, Maven, Docker.
 
@@ -57,15 +58,19 @@ Cần: JDK 21, Maven, Docker.
 cd infra
 docker compose up -d
 
-# 2) Cài parent + api vào local maven (một lần, để service kế thừa version + thấy jar contract)
+# 2) Cài parent + api vào local maven (một lần)
 cd ..
 mvn -N install                       # cài parent pom
 mvn -pl account-service-api install  # build + install jar contract
 
-# 3) Chạy hai service ở hai terminal
+# 3) Chạy Eureka TRƯỚC (các service cần nó để đăng ký), rồi hai service — mỗi cái một terminal
+mvn -pl discovery-server spring-boot:run   # http://localhost:8761 (mở xem dashboard Eureka)
 mvn -pl account-service spring-boot:run
 mvn -pl transfer-service spring-boot:run
 ```
+
+Mở http://localhost:8761 sẽ thấy `ACCOUNT-SERVICE` và `TRANSFER-SERVICE` đã đăng ký.
+Đổi client HTTP Interface ↔ Feign: sửa `account-service.client` trong `transfer-service/application.yml`.
 
 ## Thử nhanh
 

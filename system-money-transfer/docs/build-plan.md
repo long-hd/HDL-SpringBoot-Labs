@@ -10,7 +10,7 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 | 0 | Khung tối giản: account + transfer, gọi nhau bằng REST + URL cứng, happy-path | account-service, transfer-service, account-service-api | ✅ Xong |
 | 1 | Nền distributed systems (why) | (lý thuyết) | ✅ Ghi note (`m1-distributed-systems-notes.md`) |
 | 2 | Thay lời gọi thủ công bằng interface khai báo (cả HTTP Interface lẫn OpenFeign, swap qua config) | HTTP Interface + OpenFeign, cổng AccountPort | ✅ Xong |
-| 3 | Service discovery — gọi theo tên, bỏ URL cứng | discovery-server (Eureka/Consul) | ⬜ Chưa |
+| 3 | Service discovery — gọi theo tên, bỏ URL cứng (cả Feign lẫn HTTP Interface) | discovery-server (Eureka) + LoadBalancer | ✅ Xong |
 | 4 | Load balancing giữa nhiều instance | Spring Cloud LoadBalancer | ⬜ Chưa |
 | 5 | API Gateway — một cửa vào | Spring Cloud Gateway | ⬜ Chưa |
 | 6 | Config tập trung | Config Server | ⬜ Chưa |
@@ -34,6 +34,8 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 - **Async (bước 9) = Kafka**.
 - **DB = PostgreSQL, database-per-service** (một instance chung khi học, nhưng không join chéo).
 - **Config (bước 6)**: bắt đầu `native` (đọc file local) cho gọn, chuyển `git` sau.
+- **Discovery (bước 3) = Eureka** (đã chốt): mục tiêu hiểu cơ chế discovery; Eureka thuần
+  Spring, dựng nhanh, không phải vận hành hạ tầng lạ. Consul có thể làm sau như lab đối chiếu.
 - **Version**: gom về BOM tập trung ở parent pom (khác các lab rời khai ở leaf), vì các
   service ở đây chạy cùng và phải tương thích.
 - **Client (bước 2) = CẢ HAI** (đã chốt): HTTP Interface (mặc định) và OpenFeign, chọn qua

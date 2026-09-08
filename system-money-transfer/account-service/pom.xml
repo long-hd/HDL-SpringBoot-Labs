@@ -39,6 +39,14 @@
             <groupId>com.hdl.mt</groupId>
             <artifactId>account-service-api</artifactId>
         </dependency>
+        <!--
+          BƯỚC 3: đăng ký account-service vào Eureka để service khác tra theo tên. Chỉ cần
+          starter eureka-client; không cần load-balancer vì account-service không GỌI ai.
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

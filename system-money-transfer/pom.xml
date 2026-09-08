@@ -40,6 +40,7 @@
 
     <!-- Các module con của khu. Thêm module mới ở các bước sau (gateway, discovery...) vào đây. -->
     <modules>
+        <module>discovery-server</module>
         <module>account-service-api</module>
         <module>account-service</module>
         <module>transfer-service</module>

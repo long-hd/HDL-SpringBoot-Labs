@@ -21,15 +21,17 @@ import org.springframework.web.bind.annotation.RequestBody;
  *       interface Feign thường khai ở phía consumer (ở đây), KHÔNG đặt trong module
  *       contract dùng chung. Vì thế ta phải khai lại các lời gọi ở đây — chấp nhận được vì
  *       payload (DTO) vẫn dùng chung từ account-service-api (cách A).</li>
- *   <li><b>URL cứng:</b> {@code url} tường minh để bước 2 chạy chưa cần discovery. Bước 3 sẽ
- *       bỏ {@code url} và để Feign gọi theo {@code name} qua service registry.</li>
+ *   <li><b>URL:</b> BƯỚC 3 đã BỎ thuộc tính {@code url}. Chỉ còn {@code name="account-service"}
+ *       — Feign tự hỏi Eureka địa chỉ các instance rồi load-balance, giống hệt phía HTTP
+ *       Interface nhưng KHÔNG phải khai {@code @LoadBalanced} tay: OpenFeign tích hợp
+ *       discovery/LB sẵn. Đây là điểm Feign gọn hơn HTTP Interface trên Boot 3.5.</li>
  * </ul>
  *
  * <p>Lưu ý về hướng của Spring: OpenFeign được coi feature-complete từ Spring Cloud 2022.0.0;
  * Spring khuyến nghị HTTP Interface cho dự án mới. OpenFeign vẫn dùng tốt và rất phổ biến
  * trong JD/codebase thực tế, nên biết cả hai là hợp lý.</p>
  */
-@FeignClient(name = "account-service", url = "${account-service.base-url}")
+@FeignClient(name = "account-service")
 public interface AccountFeignClient {
 
     @PostMapping("/accounts/{id}/debit")

@@ -1,0 +1,15 @@
+server:
+  # Cổng chuẩn của Eureka. Các service sẽ trỏ về http://localhost:8761/eureka/
+  port: 8761
+
+spring:
+  application:
+    name: discovery-server
+
+eureka:
+  client:
+    # Bản thân Eureka server này KHÔNG cần đăng ký vào một registry khác, cũng không cần
+    # kéo danh sách service về (nó CHÍNH LÀ registry). Đặt false để chạy chế độ standalone,
+    # tránh log cảnh báo "không kết nối được peer".
+    register-with-eureka: false
+    fetch-registry: false
