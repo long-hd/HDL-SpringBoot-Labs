@@ -3,23 +3,32 @@ package com.hdl.mt.transfer.client;
 import com.hdl.mt.account.api.AccountApi;
 import com.hdl.mt.account.api.CreditRequest;
 import com.hdl.mt.account.api.DebitRequest;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 
 import java.math.BigDecimal;
 
 /**
- * Adapter dùng HTTP Interface (proxy {@link AccountApi}) để hiện thực {@link AccountPort}.
+ * Adapter "thô" (raw) dùng HTTP Interface (proxy {@link AccountApi}) để gọi account-service.
  *
- * <p>Kích hoạt khi {@code account-service.client=http-interface}. Đây cũng là MẶC ĐỊNH
- * ({@code matchIfMissing=true}) — nếu không cấu hình gì thì dùng adapter này.</p>
+ * <p>Kích hoạt khi {@code account-service.client=http-interface} (mặc định). Đánh dấu
+ * {@code @Qualifier("rawAccountPort")} để {@link ResilientAccountPort} (lớp bọc resilience)
+ * biết đây là delegate cần bọc, còn {@code TransferService} thì nhận lớp bọc (Primary).</p>
  *
- * <p>Nhiệm vụ chống ăn mòn: bắt {@link RestClientException} (lỗi mà proxy RestClient ném khi
- * account-service trả 4xx/5xx hoặc không kết nối được) và dịch sang {@link AccountClientException}
- * chung, để {@code TransferService} không phải biết tới kiểu lỗi của HTTP Interface.</p>
+ * <p>BƯỚC 7 — phân loại lỗi (điểm cốt lõi để resilience xử lý ĐÚNG):
+ * <ul>
+ *   <li>account trả 4xx ({@link HttpClientErrorException}) -> {@link AccountBusinessException}:
+ *       lỗi nghiệp vụ, KHÔNG retry.</li>
+ *   <li>account trả 5xx / mất kết nối / timeout (các {@link RestClientException} còn lại) ->
+ *       {@link AccountUnavailableException}: lỗi hạ tầng, ĐƯỢC retry + tính vào circuit breaker.</li>
+ * </ul>
+ * (4xx là con của RestClientException nên phải catch {@code HttpClientErrorException} TRƯỚC.)</p>
  */
 @Component
+@Qualifier("rawAccountPort")
 @ConditionalOnProperty(name = "account-service.client", havingValue = "http-interface", matchIfMissing = true)
 public class HttpInterfaceAccountAdapter implements AccountPort {
 
@@ -33,9 +42,12 @@ public class HttpInterfaceAccountAdapter implements AccountPort {
     public void debit(Long accountId, BigDecimal amount) {
         try {
             accountApi.debit(accountId, new DebitRequest(amount));
-        } catch (RestClientException ex) {
-            throw new AccountClientException(
-                    "Gọi debit qua HTTP Interface thất bại (accountId=" + accountId + ")", ex);
+        } catch (HttpClientErrorException e) {          // 4xx -> nghiệp vụ
+            throw new AccountBusinessException(
+                    "debit bị account-service từ chối (4xx, accountId=" + accountId + ")", e);
+        } catch (RestClientException e) {               // 5xx / I/O / timeout -> hạ tầng
+            throw new AccountUnavailableException(
+                    "debit không gọi được account-service (accountId=" + accountId + ")", e);
         }
     }
 
@@ -43,9 +55,12 @@ public class HttpInterfaceAccountAdapter implements AccountPort {
     public void credit(Long accountId, BigDecimal amount) {
         try {
             accountApi.credit(accountId, new CreditRequest(amount));
-        } catch (RestClientException ex) {
-            throw new AccountClientException(
-                    "Gọi credit qua HTTP Interface thất bại (accountId=" + accountId + ")", ex);
+        } catch (HttpClientErrorException e) {
+            throw new AccountBusinessException(
+                    "credit bị account-service từ chối (4xx, accountId=" + accountId + ")", e);
+        } catch (RestClientException e) {
+            throw new AccountUnavailableException(
+                    "credit không gọi được account-service (accountId=" + accountId + ")", e);
         }
     }
 }

@@ -64,6 +64,20 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <!--
+          BƯỚC 7: resilience (circuit breaker + retry). Dùng starter của Spring Cloud để version
+          resilience4j đồng bộ theo spring-cloud BOM (2025.0.3). Starter này kéo theo
+          resilience4j-spring-boot3 -> có annotation @CircuitBreaker/@Retry. starter-aop bắt buộc
+          để annotation (dựa trên AOP) hoạt động.
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <!--
           Cách A: transfer-service add ĐÚNG jar contract của account-service để dùng lại
           DebitRequest/CreditRequest/AccountResponse — không tự khai lại DTO. Nếu contract
           đổi, module này sẽ báo lỗi COMPILE ngay khi build.

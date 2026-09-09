@@ -11,4 +11,4 @@ transfer:
   # Hạn mức số tiền tối đa cho MỘT lần chuyển. Vượt quá -> transfer-service từ chối (HTTP 400)
   # ngay từ đầu, trước khi gọi account-service. Đây là một quy tắc nghiệp vụ (kiểm soát rủi ro),
   # khác với rate-limit ở gateway (giới hạn số lượng request).
-  max-amount-per-transaction: 150000000
+  max-amount-per-transaction: 50000000

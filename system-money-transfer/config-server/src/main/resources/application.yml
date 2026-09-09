@@ -12,13 +12,12 @@ spring:
     config:
       server:
         native:
-          # Nơi chứa file config nghiệp vụ. Liệt kê HAI đường dẫn để chắc chắn tìm được bất
-          # kể chạy `mvn -pl config-server spring-boot:run` từ thư mục gốc dự án HAY từ trong
-          # thư mục config-server (working directory của spring-boot:run có thể là một trong
-          # hai). Đường nào không tồn tại sẽ được bỏ qua.
-          #   - file:./config-repo                -> khi working dir = thư mục config-server
-          #   - file:./config-server/config-repo  -> khi working dir = thư mục gốc dự án
+          # Đường TUYỆT ĐỐI tới thư mục chứa file config, để không phụ thuộc "chạy lệnh từ
+          # thư mục nào" (working directory của spring-boot:run là thư mục gốc repo, không phải
+          # thư mục module — nên đường tương đối ./config-repo bị trật một tầng).
+          #
+          # ⚠️ ĐỔI path này nếu bạn clone repo ra chỗ khác / đổi máy. Có thể override khi chạy:
+          #   mvn -pl config-server spring-boot:run \
+          #       -Dspring-boot.run.jvmArguments="-Dspring.cloud.config.server.native.search-locations=file:/duong/dan/config-repo"
           search-locations:
-            - file:./config-repo
-            - file:./config-server/config-repo
             - file:/home/long/Workspace/spring/HDL-SpringBoot-Labs/system-money-transfer/config-server/config-repo

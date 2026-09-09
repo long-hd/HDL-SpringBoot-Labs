@@ -3,23 +3,28 @@ package com.hdl.mt.transfer.client;
 import com.hdl.mt.account.api.CreditRequest;
 import com.hdl.mt.account.api.DebitRequest;
 import feign.FeignException;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 /**
- * Adapter dùng OpenFeign ({@link AccountFeignClient}) để hiện thực {@link AccountPort}.
+ * Adapter "thô" (raw) dùng OpenFeign để gọi account-service.
  *
- * <p>Kích hoạt khi {@code account-service.client=feign}. Khi đó adapter HTTP Interface
- * (mặc định) không được tạo, và {@code TransferService} nhận đúng adapter này — mà bản thân
- * {@code TransferService} KHÔNG hề biết đã đổi client. Đó là lợi ích của {@link AccountPort}.</p>
+ * <p>Kích hoạt khi {@code account-service.client=feign}. Cũng đánh dấu
+ * {@code @Qualifier("rawAccountPort")} để {@link ResilientAccountPort} bọc lên.</p>
  *
- * <p>Chống ăn mòn: OpenFeign ném {@link FeignException} khi account-service trả lỗi; adapter
- * bắt và dịch sang {@link AccountClientException} chung — cùng loại lỗi mà adapter HTTP
- * Interface ném ra, nên tầng nghiệp vụ xử lý đồng nhất bất kể client nào.</p>
+ * <p>BƯỚC 7 — phân loại lỗi giống adapter HTTP Interface, nhưng đọc mã trạng thái từ
+ * {@link FeignException#status()}:
+ * <ul>
+ *   <li>4xx -> {@link AccountBusinessException} (không retry).</li>
+ *   <li>còn lại: 5xx, hoặc {@code status()} âm/không có khi mất kết nối/timeout ->
+ *       {@link AccountUnavailableException} (retry + circuit breaker).</li>
+ * </ul></p>
  */
 @Component
+@Qualifier("rawAccountPort")
 @ConditionalOnProperty(name = "account-service.client", havingValue = "feign")
 public class FeignAccountAdapter implements AccountPort {
 
@@ -33,9 +38,8 @@ public class FeignAccountAdapter implements AccountPort {
     public void debit(Long accountId, BigDecimal amount) {
         try {
             feignClient.debit(accountId, new DebitRequest(amount));
-        } catch (FeignException ex) {
-            throw new AccountClientException(
-                    "Gọi debit qua OpenFeign thất bại (accountId=" + accountId + ")", ex);
+        } catch (FeignException e) {
+            throw classify("debit", accountId, e);
         }
     }
 
@@ -43,9 +47,19 @@ public class FeignAccountAdapter implements AccountPort {
     public void credit(Long accountId, BigDecimal amount) {
         try {
             feignClient.credit(accountId, new CreditRequest(amount));
-        } catch (FeignException ex) {
-            throw new AccountClientException(
-                    "Gọi credit qua OpenFeign thất bại (accountId=" + accountId + ")", ex);
+        } catch (FeignException e) {
+            throw classify("credit", accountId, e);
         }
+    }
+
+    /** 4xx -> nghiệp vụ (không retry); còn lại -> hạ tầng (retry + circuit breaker). */
+    private AccountClientException classify(String op, Long accountId, FeignException e) {
+        int status = e.status();
+        if (status >= 400 && status < 500) {
+            return new AccountBusinessException(
+                    op + " bị account-service từ chối (" + status + ", accountId=" + accountId + ")", e);
+        }
+        return new AccountUnavailableException(
+                op + " không gọi được account-service (status=" + status + ", accountId=" + accountId + ")", e);
     }
 }

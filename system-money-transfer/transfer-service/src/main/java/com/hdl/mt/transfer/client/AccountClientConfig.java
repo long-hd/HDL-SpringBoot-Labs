@@ -4,6 +4,7 @@ import com.hdl.mt.account.api.AccountApi;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -42,10 +43,24 @@ public class AccountClientConfig {
     public AccountApi accountApi(@LoadBalanced RestClient.Builder builder) {
         RestClient restClient = builder
                 .baseUrl("http://account-service") // "account-service" là TÊN đăng ký ở Eureka
+                .requestFactory(timeoutRequestFactory()) // BƯỚC 7: timeout ở tầng HTTP client
                 .build();
         return HttpServiceProxyFactory
                 .builderFor(RestClientAdapter.create(restClient))
                 .build()
                 .createClient(AccountApi.class);
+    }
+
+    /**
+     * Timeout cho lời gọi HTTP (thay cho @TimeLimiter — cái đó chỉ hợp lời gọi bất đồng bộ).
+     * connect = thời gian chờ MỞ kết nối; read = thời gian chờ account-service TRẢ LỜI. Quá hạn
+     * -> ném lỗi I/O -> adapter dịch thành AccountUnavailableException -> retry/circuit breaker xử lý.
+     * Dùng SimpleClientHttpRequestFactory (JDK thuần) cho ổn định qua các phiên bản.
+     */
+    private SimpleClientHttpRequestFactory timeoutRequestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(2000);
+        factory.setReadTimeout(2000);
+        return factory;
     }
 }

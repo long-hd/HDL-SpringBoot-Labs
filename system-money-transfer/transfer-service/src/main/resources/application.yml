@@ -26,19 +26,53 @@ spring:
         format_sql: true
 
 # Cho phép gọi POST /actuator/refresh để nạp lại config từ Config Server lúc chạy.
+# BƯỚC 7: thêm circuitbreakers/retries để xem trạng thái resilience.
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,refresh
+        include: health,info,refresh,circuitbreakers,circuitbreakerevents,retries
+  health:
+    circuitbreakers:
+      enabled: true
 
-# BƯỚC 3: không còn URL cứng. transfer-service gọi account-service theo TÊN qua Eureka.
+# BƯỚC 7: cấu hình resilience cho lời gọi tới account-service (tên instance "account").
+resilience4j:
+  circuitbreaker:
+    instances:
+      account:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10                       # xét trên 10 lời gọi gần nhất
+        minimum-number-of-calls: 5                    # cần tối thiểu 5 lời gọi mới đánh giá
+        failure-rate-threshold: 50                    # >50% lỗi -> MỞ circuit
+        wait-duration-in-open-state: 10s              # mở 10s rồi thử lại (half-open)
+        permitted-number-of-calls-in-half-open-state: 3
+        # Lỗi NGHIỆP VỤ không tính vào tỉ lệ lỗi (không được làm mở circuit).
+        ignore-exceptions:
+          - com.hdl.mt.transfer.client.AccountBusinessException
+  retry:
+    instances:
+      account:
+        max-attempts: 3                               # thử tối đa 3 lần
+        wait-duration: 500ms                          # chờ giữa các lần
+        # CHỈ retry lỗi hạ tầng; lỗi nghiệp vụ (thiếu tiền...) không retry.
+        retry-exceptions:
+          - com.hdl.mt.transfer.client.AccountUnavailableException
+        ignore-exceptions:
+          - com.hdl.mt.transfer.client.AccountBusinessException
+
+  # BƯỚC 3: không còn URL cứng. transfer-service gọi account-service theo TÊN qua Eureka.
 account-service:
   # Chọn cơ chế client (giữ nguyên từ bước 2):
   #   http-interface = Spring HTTP Interface (@HttpExchange) — MẶC ĐỊNH
   #   feign          = OpenFeign
   # Cả hai giờ đều gọi theo tên "account-service" và load-balance; TransferService không đổi.
   client: http-interface
+
+# BƯỚC 7: timeout cho OpenFeign (đối xứng với timeout của RestClient trong AccountClientConfig).
+# Quá hạn -> Feign ném lỗi -> adapter dịch thành AccountUnavailableException -> retry/circuit breaker.
+spring.cloud.openfeign.client.config.default.connect-timeout: 2000
+spring.cloud.openfeign.client.config.default.read-timeout: 2000
 
 # Đăng ký transfer-service vào Eureka + để tra cứu account-service.
 eureka:

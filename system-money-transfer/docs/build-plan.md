@@ -14,7 +14,7 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 | 4 | Load balancing giữa nhiều instance | Spring Cloud LoadBalancer | ✅ Không code mới — LB đã cấu hình ở bước 3; xác nhận bằng chạy 2 instance account-service |
 | 5 | API Gateway — một cửa vào + demo rate limit | api-gateway (Gateway WebFlux) + Redis | ✅ Xong |
 | 6 | Config tập trung + refresh nóng (hạn mức chuyển tiền) | config-server (native) | ✅ Xong |
-| 7 | Resilience — circuit breaker/retry/timeout | Resilience4j | ⬜ Chưa |
+| 7 | Resilience — circuit breaker + retry + timeout (bọc quanh AccountPort) | Resilience4j | ✅ Xong |
 | 8 | **Saga + outbox + idempotency** (vá lỗ hổng bước 0) | transfer-service (orchestrator) | ⬜ Chưa |
 | 9 | Async event | Kafka | ⬜ Chưa |
 | 10 | Observability — tracing/metrics/log | Micrometer Tracing + Zipkin | ⬜ Chưa |
@@ -56,6 +56,14 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
   (lb://) + demo RequestRateLimiter (RedisRateLimiter, token bucket) để thấy giá trị đặt
   cross-cutting concern ở gateway. Artifact tên mới `spring-cloud-starter-gateway-server-webflux`
   (2025.0), prefix `spring.cloud.gateway.server.webflux.*`. Rate limit cần Redis (shared store).
+- **Resilience (bước 7) = Resilience4j, bọc quanh AccountPort** (cách 2 đã chốt): decorator
+  `ResilientAccountPort` (@Primary) đặt @CircuitBreaker + @Retry một chỗ, dùng chung cho cả hai
+  adapter (@Qualifier "rawAccountPort"). Phân loại lỗi: 4xx -> AccountBusinessException (KHÔNG
+  retry, không trip breaker); 5xx/timeout/mất kết nối -> AccountUnavailableException (retry +
+  breaker). Timeout đặt ở tầng HTTP client (RestClient + Feign), KHÔNG dùng @TimeLimiter (chỉ
+  hợp async). Đây là tầng resilience ỨNG DỤNG; tầng HẠ TẦNG (service mesh) là chuyện khác, chưa dùng.
+  ⚠️ Retry chưa an toàn tuyệt đối vì thao tác chưa idempotent (double-debit nếu phản hồi mất) —
+  bước 8 (idempotency) vá.
 - **Version**: gom về BOM tập trung ở parent pom (khác các lab rời khai ở leaf), vì các
   service ở đây chạy cùng và phải tương thích.
 - **Client (bước 2) = CẢ HAI** (đã chốt): HTTP Interface (mặc định) và OpenFeign, chọn qua
