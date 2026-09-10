@@ -35,16 +35,16 @@ public class AccountController {
         return toResponse(accountService.getById(id));
     }
 
-    /** Trừ tiền khỏi tài khoản {id}. */
+    /** Trừ tiền khỏi tài khoản {id}. operationId trong body là khóa idempotency. */
     @PostMapping("/{id}/debit")
     public AccountResponse debit(@PathVariable Long id, @RequestBody DebitRequest request) {
-        return toResponse(accountService.debit(id, request.amount()));
+        return toResponse(accountService.debit(id, request.amount(), request.operationId()));
     }
 
     /** Cộng tiền vào tài khoản {id}. */
     @PostMapping("/{id}/credit")
     public AccountResponse credit(@PathVariable Long id, @RequestBody CreditRequest request) {
-        return toResponse(accountService.credit(id, request.amount()));
+        return toResponse(accountService.credit(id, request.amount(), request.operationId()));
     }
 
     /** Chuyển entity nội bộ sang DTO công khai (không lộ entity ra ngoài ranh giới service). */

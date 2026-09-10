@@ -10,18 +10,10 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 /**
- * Adapter "thô" (raw) dùng OpenFeign để gọi account-service.
- *
- * <p>Kích hoạt khi {@code account-service.client=feign}. Cũng đánh dấu
- * {@code @Qualifier("rawAccountPort")} để {@link ResilientAccountPort} bọc lên.</p>
- *
- * <p>BƯỚC 7 — phân loại lỗi giống adapter HTTP Interface, nhưng đọc mã trạng thái từ
- * {@link FeignException#status()}:
- * <ul>
- *   <li>4xx -> {@link AccountBusinessException} (không retry).</li>
- *   <li>còn lại: 5xx, hoặc {@code status()} âm/không có khi mất kết nối/timeout ->
- *       {@link AccountUnavailableException} (retry + circuit breaker).</li>
- * </ul></p>
+ * Adapter "thô" (raw) dùng OpenFeign ({@code account-service.client=feign}). Bọc bởi
+ * {@link ResilientAccountPort}. Phân loại lỗi qua {@link FeignException#status()}:
+ * 4xx -> nghiệp vụ (không retry); còn lại -> hạ tầng (retry + circuit breaker).
+ * Bước 8: truyền thêm {@code operationId} vào DTO để account-service khử trùng.
  */
 @Component
 @Qualifier("rawAccountPort")
@@ -35,24 +27,23 @@ public class FeignAccountAdapter implements AccountPort {
     }
 
     @Override
-    public void debit(Long accountId, BigDecimal amount) {
+    public void debit(Long accountId, BigDecimal amount, String operationId) {
         try {
-            feignClient.debit(accountId, new DebitRequest(amount));
+            feignClient.debit(accountId, new DebitRequest(operationId, amount));
         } catch (FeignException e) {
             throw classify("debit", accountId, e);
         }
     }
 
     @Override
-    public void credit(Long accountId, BigDecimal amount) {
+    public void credit(Long accountId, BigDecimal amount, String operationId) {
         try {
-            feignClient.credit(accountId, new CreditRequest(amount));
+            feignClient.credit(accountId, new CreditRequest(operationId, amount));
         } catch (FeignException e) {
             throw classify("credit", accountId, e);
         }
     }
 
-    /** 4xx -> nghiệp vụ (không retry); còn lại -> hạ tầng (retry + circuit breaker). */
     private AccountClientException classify(String op, Long accountId, FeignException e) {
         int status = e.status();
         if (status >= 400 && status < 500) {

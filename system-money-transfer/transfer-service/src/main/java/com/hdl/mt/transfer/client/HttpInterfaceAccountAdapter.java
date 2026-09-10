@@ -12,20 +12,12 @@ import org.springframework.web.client.RestClientException;
 import java.math.BigDecimal;
 
 /**
- * Adapter "thô" (raw) dùng HTTP Interface (proxy {@link AccountApi}) để gọi account-service.
+ * Adapter "thô" (raw) dùng HTTP Interface (proxy {@link AccountApi}). Mặc định
+ * ({@code account-service.client=http-interface}). Bọc bởi {@link ResilientAccountPort}.
  *
- * <p>Kích hoạt khi {@code account-service.client=http-interface} (mặc định). Đánh dấu
- * {@code @Qualifier("rawAccountPort")} để {@link ResilientAccountPort} (lớp bọc resilience)
- * biết đây là delegate cần bọc, còn {@code TransferService} thì nhận lớp bọc (Primary).</p>
- *
- * <p>BƯỚC 7 — phân loại lỗi (điểm cốt lõi để resilience xử lý ĐÚNG):
- * <ul>
- *   <li>account trả 4xx ({@link HttpClientErrorException}) -> {@link AccountBusinessException}:
- *       lỗi nghiệp vụ, KHÔNG retry.</li>
- *   <li>account trả 5xx / mất kết nối / timeout (các {@link RestClientException} còn lại) ->
- *       {@link AccountUnavailableException}: lỗi hạ tầng, ĐƯỢC retry + tính vào circuit breaker.</li>
- * </ul>
- * (4xx là con của RestClientException nên phải catch {@code HttpClientErrorException} TRƯỚC.)</p>
+ * <p>Phân loại lỗi (bước 7): 4xx -> {@link AccountBusinessException} (không retry);
+ * 5xx/timeout/mất kết nối -> {@link AccountUnavailableException} (retry + circuit breaker).
+ * Bước 8: truyền thêm {@code operationId} vào DTO để account-service khử trùng.</p>
  */
 @Component
 @Qualifier("rawAccountPort")
@@ -39,22 +31,22 @@ public class HttpInterfaceAccountAdapter implements AccountPort {
     }
 
     @Override
-    public void debit(Long accountId, BigDecimal amount) {
+    public void debit(Long accountId, BigDecimal amount, String operationId) {
         try {
-            accountApi.debit(accountId, new DebitRequest(amount));
-        } catch (HttpClientErrorException e) {          // 4xx -> nghiệp vụ
+            accountApi.debit(accountId, new DebitRequest(operationId, amount));
+        } catch (HttpClientErrorException e) {
             throw new AccountBusinessException(
                     "debit bị account-service từ chối (4xx, accountId=" + accountId + ")", e);
-        } catch (RestClientException e) {               // 5xx / I/O / timeout -> hạ tầng
+        } catch (RestClientException e) {
             throw new AccountUnavailableException(
                     "debit không gọi được account-service (accountId=" + accountId + ")", e);
         }
     }
 
     @Override
-    public void credit(Long accountId, BigDecimal amount) {
+    public void credit(Long accountId, BigDecimal amount, String operationId) {
         try {
-            accountApi.credit(accountId, new CreditRequest(amount));
+            accountApi.credit(accountId, new CreditRequest(operationId, amount));
         } catch (HttpClientErrorException e) {
             throw new AccountBusinessException(
                     "credit bị account-service từ chối (4xx, accountId=" + accountId + ")", e);

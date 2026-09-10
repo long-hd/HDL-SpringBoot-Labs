@@ -15,7 +15,7 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 | 5 | API Gateway — một cửa vào + demo rate limit | api-gateway (Gateway WebFlux) + Redis | ✅ Xong |
 | 6 | Config tập trung + refresh nóng (hạn mức chuyển tiền) | config-server (native) | ✅ Xong |
 | 7 | Resilience — circuit breaker + retry + timeout (bọc quanh AccountPort) | Resilience4j | ✅ Xong |
-| 8 | **Saga + outbox + idempotency** (vá lỗ hổng bước 0) | transfer-service (orchestrator) | ⬜ Chưa |
+| 8 | **Saga (orchestration + bù trừ) + idempotency** — vá "tiền kẹt" & double-debit | transfer-service (saga) + account-service (bảng idempotency) | ✅ Xong |
 | 9 | Async event | Kafka | ⬜ Chưa |
 | 10 | Observability — tracing/metrics/log | Micrometer Tracing + Zipkin | ⬜ Chưa |
 | 11 | Security phân tán | OAuth2/JWT ở gateway | ⬜ Chưa |
@@ -64,6 +64,14 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
   hợp async). Đây là tầng resilience ỨNG DỤNG; tầng HẠ TẦNG (service mesh) là chuyện khác, chưa dùng.
   ⚠️ Retry chưa an toàn tuyệt đối vì thao tác chưa idempotent (double-debit nếu phản hồi mất) —
   bước 8 (idempotency) vá.
+- **Saga (bước 8) = orchestration + idempotency ở Postgres** (đã chốt): transfer-service điều
+  phối debit -> credit, credit fail thì bù trừ (credit hoàn về nguồn). Idempotency: mỗi bước có
+  operationId ổn định ("transfer-{id}-debit/-credit/-compensate"); account-service ghi khóa vào
+  bảng processed_operation (khóa chính, saveAndFlush + bắt DataIntegrityViolation) -> gọi lại
+  cùng khóa thì bỏ qua, không áp dụng lần hai. Cũng đã sửa lỗi retry-thử-lại-khi-circuit-OPEN
+  (fallback ném AccountClientException base cho CallNotPermittedException -> không nằm trong
+  retry-exceptions -> fail nhanh 1 lần). GIỚI HẠN còn lại: ca "trừ nguồn xong nhưng mất phản hồi"
+  (transfer tưởng fail) cần job đối soát/reconcile — chưa làm, ghi nhận như Soar có reconcile.
 - **Version**: gom về BOM tập trung ở parent pom (khác các lab rời khai ở leaf), vì các
   service ở đây chạy cùng và phải tương thích.
 - **Client (bước 2) = CẢ HAI** (đã chốt): HTTP Interface (mặc định) và OpenFeign, chọn qua

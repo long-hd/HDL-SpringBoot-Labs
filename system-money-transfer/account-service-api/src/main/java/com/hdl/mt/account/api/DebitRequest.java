@@ -5,14 +5,13 @@ import java.math.BigDecimal;
 /**
  * Yêu cầu TRỪ tiền khỏi một tài khoản.
  *
- * <p>Cố ý là một DTO riêng (không dùng chung với credit) để mỗi thao tác có tên rõ
- * nghĩa nghiệp vụ ở tầng API — người đọc code/log biết ngay đây là lệnh trừ tiền,
- * thay vì một "amount" chung chung không rõ chiều.</p>
- *
- * @param amount số tiền cần trừ (phải dương; account-service sẽ kiểm tra và từ chối
- *               nếu &le; 0 hoặc vượt quá số dư)
+ * @param operationId khóa idempotency — định danh DUY NHẤT cho thao tác này. account-service
+ *                    nhớ khóa đã xử lý; nếu nhận lại đúng khóa (do retry/gọi lại) thì BỎ QUA,
+ *                    không trừ lần hai. Đây là thứ khiến retry ở bước 7 trở nên an toàn.
+ * @param amount      số tiền cần trừ (phải dương)
  */
 public record DebitRequest(
+        String operationId,
         BigDecimal amount
 ) {
 }

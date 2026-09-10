@@ -68,6 +68,23 @@ public class Transfer {
         this.failureReason = reason;
     }
 
+    /** Đã trừ nguồn, cộng đích fail -> bắt đầu bù trừ. */
+    public void markCompensating(String reason) {
+        this.status = TransferStatus.COMPENSATING;
+        this.failureReason = reason;
+    }
+
+    /** Bù trừ thành công: đã hoàn tiền về nguồn. */
+    public void markCompensated() {
+        this.status = TransferStatus.COMPENSATED;
+    }
+
+    /** Bù trừ thất bại: tiền kẹt ở nguồn, cần đối soát/can thiệp. */
+    public void markCompensationFailed(String reason) {
+        this.status = TransferStatus.COMPENSATION_FAILED;
+        this.failureReason = reason;
+    }
+
     public Long getId() {
         return id;
     }

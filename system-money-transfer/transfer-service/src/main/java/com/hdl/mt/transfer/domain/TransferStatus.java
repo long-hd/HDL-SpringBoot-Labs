@@ -1,10 +1,7 @@
 package com.hdl.mt.transfer.domain;
 
 /**
- * Trạng thái một lệnh chuyển tiền.
- *
- * <p>Bước 0 chỉ dùng ba trạng thái đơn giản. Ở bước 8 (Saga) tập trạng thái sẽ giàu hơn
- * để mô tả các bước trung gian và bù trừ (ví dụ: đã-trừ-nguồn, đang-bù-trừ...).</p>
+ * Trạng thái một lệnh chuyển tiền — mở rộng ở bước 8 để mô tả luồng Saga có bù trừ.
  */
 public enum TransferStatus {
 
@@ -14,6 +11,15 @@ public enum TransferStatus {
     /** Đã trừ nguồn và cộng đích thành công. */
     COMPLETED,
 
-    /** Không hoàn tất (nguồn không đủ tiền, hoặc lỗi giữa chừng). */
-    FAILED
+    /** Không hoàn tất và KHÔNG để lại hậu quả cần bù (ví dụ trừ nguồn đã fail ngay). */
+    FAILED,
+
+    /** Đã trừ nguồn nhưng cộng đích fail -> đang chạy bù trừ (hoàn tiền về nguồn). */
+    COMPENSATING,
+
+    /** Đã bù trừ xong: tiền đã hoàn lại nguồn, hệ thống về trạng thái nhất quán. */
+    COMPENSATED,
+
+    /** Bù trừ cũng fail -> tiền đang kẹt ở nguồn, CẦN can thiệp/đối soát (reconcile). */
+    COMPENSATION_FAILED
 }
