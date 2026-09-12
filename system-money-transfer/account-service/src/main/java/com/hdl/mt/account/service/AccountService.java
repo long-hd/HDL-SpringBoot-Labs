@@ -56,6 +56,10 @@ public class AccountService {
         }
         Account account = getById(accountId);
         account.debit(amount);
+
+        // TẠM để test timeout — nhớ xóa sau
+        // try { Thread.sleep(3000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+
         return account;
     }
 

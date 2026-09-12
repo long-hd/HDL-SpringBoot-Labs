@@ -20,7 +20,8 @@ có chỗ bấu víu. Bản đồ này để đối chiếu về sau "đã làm 
 | 10 | Observability — tracing/metrics/log | Micrometer Tracing + Zipkin | ⬜ Chưa |
 | 11 | Security phân tán | OAuth2/JWT ở gateway | ⬜ Chưa |
 | 12 | Đóng gói lên K8s | minikube | ⬜ Chưa |
-| (sau) | Sổ cái ghi kép + reconciliation (fintech nâng cao, tuỳ chọn) | ledger-service | ⬜ Tuỳ chọn |
+| (sau) | Sổ cái ghi kép + reconciliation (fintech nâng cao, tuỳ chọn) | ledger-service | ⬜ Tuỳ chọn (ledger); reconcile ✅ đã làm |
+| +R | Reconcile job — tự chữa phantom debit + tiền kẹt (đa node an toàn) | transfer-service (@Scheduled+ShedLock) + account (op-status endpoint) | ✅ Xong |
 
 ## Quyết định đã chốt (để không phải quyết lại)
 

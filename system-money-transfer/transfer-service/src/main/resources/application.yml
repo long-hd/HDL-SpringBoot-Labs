@@ -25,6 +25,12 @@ spring:
       hibernate:
         format_sql: true
 
+  # RECONCILE: chạy schema.sql lúc khởi động để tạo bảng shedlock (không phải JPA entity nên
+  # ddl-auto không tạo giúp). CREATE TABLE IF NOT EXISTS nên chạy lại vô hại.
+  sql:
+    init:
+      mode: always
+
 # Cho phép gọi POST /actuator/refresh để nạp lại config từ Config Server lúc chạy.
 # BƯỚC 7: thêm circuitbreakers/retries để xem trạng thái resilience.
 management:

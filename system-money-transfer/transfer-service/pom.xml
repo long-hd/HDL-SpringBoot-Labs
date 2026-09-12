@@ -78,6 +78,21 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
         <!--
+          RECONCILE (mở rộng): ShedLock để job @Scheduled chỉ chạy trên MỘT node mỗi lượt (chống
+          trùng khi nhiều instance). Là thư viện bên thứ ba, KHÔNG nằm trong spring-cloud BOM ->
+          phải ghi version tường minh. Khóa lưu ở Postgres (provider jdbc-template).
+        -->
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>5.16.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-jdbc-template</artifactId>
+            <version>5.16.0</version>
+        </dependency>
+        <!--
           Cách A: transfer-service add ĐÚNG jar contract của account-service để dùng lại
           DebitRequest/CreditRequest/AccountResponse — không tự khai lại DTO. Nếu contract
           đổi, module này sẽ báo lỗi COMPILE ngay khi build.
